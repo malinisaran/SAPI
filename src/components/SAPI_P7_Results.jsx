@@ -43,7 +43,7 @@ function getBand(score) {
 }
 
 // ── Logo Component ──────────────────────────────────────────────────────────
-function SAPILogo({ size = 80 }) {
+function SAPILogo({ size = 120 }) {
   return (
     <img
       src="/logo.png"

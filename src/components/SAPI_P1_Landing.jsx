@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 // ── Logo Component ──────────────────────────────────────────────────────────
-function SAPIGlobe({ size = 80 }) {
+function SAPIGlobe({ size = 96 }) {
   return (
     <img
       src="/logo.png"
@@ -10,7 +10,13 @@ function SAPIGlobe({ size = 80 }) {
       style={{
         width: size,
         height: size,
-        objectFit: 'contain'
+        objectFit: 'contain',
+        background: 'transparent',
+        borderRadius: '50%',
+        padding: '4px',
+        boxSizing: 'border-box',
+        WebkitMaskImage: 'radial-gradient(circle, white 100%, transparent 100%)',
+        maskImage: 'radial-gradient(circle, white 100%, transparent 100%)'
       }}
     />
   );
@@ -341,9 +347,15 @@ const s = {
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function SAPILanding() {
+export default function SAPILanding({ onBegin }) {
   const navigate = useNavigate();
   const [hovering, setHovering] = useState(false);
+
+  const handleBegin = () => {
+    window.scrollTo(0, 0);
+    navigate('/preview');
+    if (onBegin) onBegin();
+  };
 
   return (
     <div style={s.page}>
@@ -355,38 +367,55 @@ export default function SAPILanding() {
           <div style={s.wordmark}>
             The Sovereign AI<br />Power Index
           </div>
-          <div style={s.classification}>Classification: Restricted</div>
+          <div style={s.classification}>For Government & Sovereign Institutions</div>
         </div>
       </header>
 
       {/* ── Hero ── */}
       <div style={s.hero}>
-        <div style={s.sub}>Tier 1 Free Assessment · Version 1.0 · March 2026</div>
+        <div style={s.sub}>Sovereign AI Readiness Assessment · Free · 12 Minutes</div>
         <div style={s.strapline}>
-          The definitive measure of sovereign AI readiness.
-        </div>
-        <div style={{
-          fontFamily: "system-ui, sans-serif",
-          fontSize: 14,
-          color: C.muted,
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          marginBottom: 16,
-        }}>
-          Index &nbsp;·&nbsp; Council &nbsp;·&nbsp; Agent of Change
+          The nations that lead the AI era will not do so by accident.
         </div>
         <div style={{
           fontFamily: "system-ui, sans-serif",
           fontSize: 13,
           color: C.muted,
-          lineHeight: 1.7,
-          maxWidth: 600,
+          lineHeight: 1.8,
+          maxWidth: 620,
           marginTop: 20,
+          marginBottom: 28,
         }}>
-          SAPI is the first composite index designed to assess sovereign AI readiness as a compound institutional capability — measuring whether your nation controls its compute, finances its AI infrastructure at scale, governs deployment with legal clarity, protects strategic data, and converts capability into coordinated state action.
+          Governments that understand their AI position today will set the terms of global competition for the next two decades. Those that don't will find those terms set for them. SAPI gives your ministry the diagnostic clarity to make consequential decisions — on infrastructure, investment, governance, and strategic deployment — before the window closes.
         </div>
-        <div style={s.versionLine}>
-          Version 1.0 &nbsp;·&nbsp; March 2026 &nbsp;·&nbsp; Classification: Restricted
+        <div style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "24px",
+          marginBottom: 4,
+        }}>
+          {[
+            ["Benchmark", "See exactly where your nation stands across five dimensions of AI power"],
+            ["Prioritise", "Identify the highest-leverage gaps your government should close first"],
+            ["Act", "Receive a prioritised roadmap tailored to your current score and development stage"],
+          ].map(([label, desc]) => (
+            <div key={label} style={{ flex: "1 1 160px", minWidth: 160 }}>
+              <div style={{
+                fontFamily: "system-ui, sans-serif",
+                fontSize: 10,
+                letterSpacing: "0.18em",
+                color: C.gold,
+                textTransform: "uppercase",
+                marginBottom: 6,
+              }}>{label}</div>
+              <div style={{
+                fontFamily: "system-ui, sans-serif",
+                fontSize: 12,
+                color: C.muted,
+                lineHeight: 1.6,
+              }}>{desc}</div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -474,10 +503,7 @@ export default function SAPILanding() {
           }}
           onMouseEnter={() => setHovering(true)}
           onMouseLeave={() => setHovering(false)}
-          onClick={() => {
-    window.scrollTo(0, 0);
-    navigate('/preview');
-  }}
+          onClick={handleBegin}
         >
           Begin Tier 1 Assessment
         </button>

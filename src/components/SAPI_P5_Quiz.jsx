@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 // ── Logo Component ──────────────────────────────────────────────────────────
-function SAPIGlobe({ size = 58 }) {
+function SAPIGlobe({ size = 64 }) {
   return (
     <img
       src="/logo.png"
