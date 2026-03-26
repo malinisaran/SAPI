@@ -634,16 +634,6 @@ export default function SAPIDimIntro() {
 // ── Demo wrapper (remove in production) ──────────────────────────────────────
 // This allows standalone preview of each dimension by cycling through them.
 export function SAPIDimIntroDemo() {
-  const [appState, setAppState] = useState({ currentDimension: 0 });
-
-  function mockSetPage(page) {
-    // For demo: cycling through dimensions simulates 'quiz' → back to next dimIntro
-    if (page === "quiz") {
-      const next = (appState.currentDimension + 1) % 5;
-      setAppState(prev => ({ ...prev, currentDimension: next }));
-    }
-  }
-
   return (
     <SAPIDimIntro />
   );
