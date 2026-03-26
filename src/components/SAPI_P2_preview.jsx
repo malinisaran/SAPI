@@ -1,26 +1,18 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-function SAPIGlobe({ size = 32 }) {
+// ── Logo Component ──────────────────────────────────────────────────────────
+function SAPIGlobe({ size = 56 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="32" cy="32" r="29" stroke="white" strokeWidth="1.2" />
-      <ellipse cx="32" cy="32" rx="29" ry="11" stroke="white" strokeWidth="1" strokeDasharray="2 1.5" />
-      <ellipse cx="32" cy="32" rx="22" ry="29" stroke="white" strokeWidth="1" transform="rotate(-28 32 32)" strokeDasharray="2 1.5" />
-      <ellipse cx="32" cy="32" rx="22" ry="29" stroke="white" strokeWidth="0.8" transform="rotate(28 32 32)" strokeDasharray="2 1.5" />
-      {[[32,3],[55,20],[55,44],[32,61],[9,44],[9,20],[46,12],[18,52]].map(([cx,cy],i) => (
-        <circle key={i} cx={cx} cy={cy} r="2.2" fill="white" />
-      ))}
-      <line x1="32" y1="3"  x2="55" y2="20" stroke="white" strokeWidth="0.6" opacity="0.5" />
-      <line x1="55" y1="20" x2="55" y2="44" stroke="white" strokeWidth="0.6" opacity="0.5" />
-      <line x1="55" y1="44" x2="32" y2="61" stroke="white" strokeWidth="0.6" opacity="0.5" />
-      <line x1="32" y1="61" x2="9"  y2="44" stroke="white" strokeWidth="0.6" opacity="0.5" />
-      <line x1="9"  y1="44" x2="9"  y2="20" stroke="white" strokeWidth="0.6" opacity="0.5" />
-      <line x1="9"  y1="20" x2="32" y2="3"  stroke="white" strokeWidth="0.6" opacity="0.5" />
-      <line x1="46" y1="12" x2="55" y2="44" stroke="white" strokeWidth="0.6" opacity="0.4" />
-      <line x1="18" y1="52" x2="9"  y2="20" stroke="white" strokeWidth="0.6" opacity="0.4" />
-      <line x1="46" y1="12" x2="18" y2="52" stroke="white" strokeWidth="0.6" opacity="0.3" />
-    </svg>
+    <img
+      src="/logo.png"
+      alt="SAPI Logo"
+      style={{
+        width: size,
+        height: size,
+        objectFit: 'contain'
+      }}
+    />
   );
 }
 
@@ -184,7 +176,7 @@ export default function App() {
       {/* Header */}
       <header style={{ borderBottom:`1px solid ${C.bronze}`, padding:"20px 0" }}>
         <div style={{ maxWidth:1100, margin:"0 auto", padding:"0 32px", display:"flex", alignItems:"center", gap:16 }}>
-          <SAPIGlobe size={32} />
+          <SAPIGlobe size={48} />
           <div style={{ fontFamily:"'Georgia',serif", fontSize:11, letterSpacing:"0.2em", color:C.parchment, textTransform:"uppercase", lineHeight:1.5 }}>
             The Sovereign AI<br/>Power Index
           </div>

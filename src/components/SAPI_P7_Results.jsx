@@ -42,22 +42,24 @@ function getBand(score) {
   return               { label: "Low",    color: C.crimson, bg: "rgba(192,48,88,0.15)"  };
 }
 
-// ── Inline SVG Logo ───────────────────────────────────────────────────────────
-function SAPILogo({ size = 36 }) {
+// ── Logo Component ──────────────────────────────────────────────────────────
+function SAPILogo({ size = 80 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="32" cy="32" r="28" stroke="white" strokeWidth="1.2" opacity="0.9" />
-      <ellipse cx="32" cy="32" rx="28" ry="10" stroke={C.gold} strokeWidth="0.9" opacity="0.8" />
-      <ellipse cx="32" cy="32" rx="10" ry="28" stroke="white" strokeWidth="0.8" opacity="0.55" />
-      <ellipse cx="32" cy="32" rx="21" ry="28" stroke="white" strokeWidth="0.7" strokeDasharray="2 2" opacity="0.35" transform="rotate(40 32 32)" />
-      {[[32,4],[56,18],[54,46],[32,60],[8,46],[10,18]].map(([x,y],i)=>(
-        <circle key={i} cx={x} cy={y} r="2" fill="white" opacity="0.75" />
-      ))}
-      {[[32,4,56,18],[56,18,54,46],[54,46,32,60],[32,60,8,46],[8,46,10,18],[10,18,32,4]].map(([x1,y1,x2,y2],i)=>(
-        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeWidth="0.5" opacity="0.3" />
-      ))}
-      <circle cx="32" cy="32" r="2.5" fill={C.gold} opacity="0.9" />
-    </svg>
+    <img
+      src="/logo.png"
+      alt="SAPI Logo"
+      style={{
+        width: size,
+        height: size,
+        objectFit: 'contain',
+        background: 'transparent',
+        borderRadius: '50%',
+        padding: '4px',
+        boxSizing: 'border-box',
+        WebkitMaskImage: 'radial-gradient(circle, white 100%, transparent 100%)',
+        maskImage: 'radial-gradient(circle, white 100%, transparent 100%)'
+      }}
+    />
   );
 }
 

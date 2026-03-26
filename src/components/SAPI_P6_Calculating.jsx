@@ -49,79 +49,24 @@ function getTier(score) {
   return               { label: "Pre-conditions Unmet",     color: "#C03058" };
 }
 
-// ── Animated SAPI Globe ───────────────────────────────────────────────────────
-// Three independent orbital animations for analytical weight
-function SAPIGlobeAnimated({ size = 96 }) {
+// ── Logo Component ──────────────────────────────────────────────────────────
+function SAPIGlobeAnimated({ size = 117 }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ display: "block" }}
-    >
-      {/* Outer sphere */}
-      <circle cx="32" cy="32" r="29" stroke="white" strokeWidth="1.1" opacity="0.9" />
-
-      {/* Orbit ring 1 — equatorial, slow counter-rotation */}
-      <ellipse
-        cx="32" cy="32" rx="29" ry="11"
-        stroke={C.gold} strokeWidth="1" strokeDasharray="2 1.5"
-        style={{
-          transformOrigin: "32px 32px",
-          animation: "orbitSpin1 6s linear infinite",
-          opacity: 0.85,
-        }}
-      />
-
-      {/* Orbit ring 2 — tilted, medium rotation */}
-      <ellipse
-        cx="32" cy="32" rx="22" ry="29"
-        stroke="white" strokeWidth="0.9" strokeDasharray="2 2"
-        transform="rotate(-28 32 32)"
-        style={{
-          transformOrigin: "32px 32px",
-          animation: "orbitSpin2 9s linear infinite",
-          opacity: 0.65,
-        }}
-      />
-
-      {/* Orbit ring 3 — counter-tilt, slow counter-rotation */}
-      <ellipse
-        cx="32" cy="32" rx="22" ry="29"
-        stroke="white" strokeWidth="0.7" strokeDasharray="1.5 2.5"
-        transform="rotate(28 32 32)"
-        style={{
-          transformOrigin: "32px 32px",
-          animation: "orbitSpin3 12s linear infinite reverse",
-          opacity: 0.5,
-        }}
-      />
-
-      {/* Constellation nodes — pulsing */}
-      {[[32,3],[55,20],[55,44],[32,61],[9,44],[9,20],[46,12],[18,52]].map(([cx,cy], i) => (
-        <circle
-          key={i}
-          cx={cx} cy={cy} r="2.2"
-          fill="white"
-          style={{
-            animation: `nodePulse 2.4s ease-in-out ${(i * 0.28).toFixed(2)}s infinite`,
-          }}
-        />
-      ))}
-
-      {/* Constellation lines */}
-      <line x1="32" y1="3"  x2="55" y2="20" stroke="white" strokeWidth="0.6" opacity="0.45" />
-      <line x1="55" y1="20" x2="55" y2="44" stroke="white" strokeWidth="0.6" opacity="0.45" />
-      <line x1="55" y1="44" x2="32" y2="61" stroke="white" strokeWidth="0.6" opacity="0.45" />
-      <line x1="32" y1="61" x2="9"  y2="44" stroke="white" strokeWidth="0.6" opacity="0.45" />
-      <line x1="9"  y1="44" x2="9"  y2="20" stroke="white" strokeWidth="0.6" opacity="0.45" />
-      <line x1="9"  y1="20" x2="32" y2="3"  stroke="white" strokeWidth="0.6" opacity="0.45" />
-      <line x1="46" y1="12" x2="55" y2="44" stroke="white" strokeWidth="0.5" opacity="0.30" />
-      <line x1="18" y1="52" x2="9"  y2="20" stroke="white" strokeWidth="0.5" opacity="0.30" />
-      <line x1="46" y1="12" x2="18" y2="52" stroke="white" strokeWidth="0.5" opacity="0.22" />
-    </svg>
+    <img
+      src="/logo.png"
+      alt="SAPI Logo"
+      style={{
+        width: size,
+        height: size,
+        objectFit: 'contain',
+        background: 'transparent',
+        borderRadius: '50%',
+        padding: '8px',
+        boxSizing: 'border-box',
+        WebkitMaskImage: 'radial-gradient(circle, white 100%, transparent 100%)',
+        maskImage: 'radial-gradient(circle, white 100%, transparent 100%)'
+      }}
+    />
   );
 }
 
