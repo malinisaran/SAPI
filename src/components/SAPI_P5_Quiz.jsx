@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchQuestions } from "../services/questionService";
 
 // ── Logo Component ──────────────────────────────────────────────────────────
 function SAPIGlobe({ size = 64 }) {
@@ -385,19 +386,40 @@ const getTier = (score) => {
   return               { label: "Pre-conditions Unmet",        color: "#C03058" };
 };
 
+// ── Helper: transform API questions to component format ──────────────────────
+const transformApiQuestions = (apiData) => {
+  const transformed = [];
+  
+  apiData.forEach((dimension) => {
+    dimension.questions.forEach((q) => {
+      transformed.push({
+        id: `Q${q.id}`,
+        dimIndex: dimension.dimension_id - 1, // API uses 1-based, component uses 0-based
+        dimName: dimension.dimension_name,
+        text: q.question_text,
+        options: q.options.map((opt) => ({
+          label: opt.text,
+          score: opt.score,
+        })),
+      });
+    });
+  });
+  
+  return transformed;
+};
+
 // ── Helper: get questions for a dimension index ──────────────────────────────
-const getDimQuestions = (dimIndex) =>
-  ALL_QUESTIONS.filter(q => q.dimIndex === dimIndex);
+const getDimQuestions = (dimIndex, allQuestions) =>
+  allQuestions.filter(q => q.dimIndex === dimIndex);
 
 // ── Overall progress tracking ────────────────────────────────────────────────
-const getQuestionsBeforeDim = (dimIndex) =>
-  ALL_QUESTIONS.filter(q => q.dimIndex < dimIndex).length;
+const getQuestionsBeforeDim = (dimIndex, allQuestions) =>
+  allQuestions.filter(q => q.dimIndex < dimIndex).length;
 
 // ── Dual Progress Bar ────────────────────────────────────────────────────────
-function DualProgressBar({ dimIndex, questionIndexInDim, totalInDim }) {
+function DualProgressBar({ dimIndex, questionIndexInDim, totalInDim, questionsBeforeDim }) {
   const dimPct        = ((questionIndexInDim + 1) / totalInDim) * 100;
-  const answeredBefore = getQuestionsBeforeDim(dimIndex);
-  const overallPct    = ((answeredBefore + questionIndexInDim + 1) / 30) * 100;
+  const overallPct    = ((questionsBeforeDim + questionIndexInDim + 1) / 30) * 100;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -448,7 +470,7 @@ function DualProgressBar({ dimIndex, questionIndexInDim, totalInDim }) {
             fontFamily: "system-ui, sans-serif", fontSize: 10,
             color: C.muted, letterSpacing: "0.08em",
           }}>
-            {answeredBefore + questionIndexInDim + 1} / 30
+            {questionsBeforeDim + questionIndexInDim + 1} / 30
           </span>
         </div>
         <div style={{
@@ -596,16 +618,73 @@ function AnswerCard({ label, optIndex, isSelected, onSelect }) {
 }
 
 // ── Main Quiz Component ───────────────────────────────────────────────────────
-export default function SAPIQuiz({ appState, setCurrentPage }) {
+export default function SAPIQuiz({ appState, setCurrentPage, setAppState }) {
   const navigate = useNavigate();
+  
+  // State for questions from API
+  const [allQuestions, setAllQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Fetch questions from API on mount
+  useEffect(() => {
+    const loadQuestions = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchQuestions();
+        if (response.success && response.data) {
+          // Transform API data to match component structure
+          const transformed = transformApiQuestions(response.data);
+          setAllQuestions(transformed);
+        } else {
+          setError("Failed to load questions");
+        }
+      } catch (err) {
+        console.error("Error loading questions:", err);
+        setError(err.message);
+        // Fallback to hardcoded questions if API fails
+        setAllQuestions(ALL_QUESTIONS);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadQuestions();
+  }, []);
   
   // Get current dimension from props or default to 0
   const dimIndex = appState?.currentDimension ?? 0;
-  const dimQuestions = getDimQuestions(dimIndex);
+  const dimQuestions = getDimQuestions(dimIndex, allQuestions);
   const [qIndex, setQIndex] = useState(0);
   const [selectedScore, setSelectedScore] = useState(null);
   const [nextHover, setNextHover]   = useState(false);
   const [backHover, setBackHover]   = useState(false);
+  
+  // Local ref to accumulate all answers across dimensions
+  const answersRef = useRef(appState?.answers || {});
+  
+  // Load persisted answers from localStorage on mount
+  useEffect(() => {
+    const storedAnswers = localStorage.getItem('sapi_answers');
+    if (storedAnswers) {
+      try {
+        answersRef.current = JSON.parse(storedAnswers);
+        console.log('Loaded persisted answers:', Object.keys(answersRef.current).length);
+      } catch (e) {
+        console.error('Failed to parse stored answers:', e);
+      }
+    }
+  }, []);
+  
+  // Save answers to localStorage whenever they change
+  const saveAnswer = (newAnswer) => {
+    answersRef.current = { ...answersRef.current, ...newAnswer };
+    localStorage.setItem('sapi_answers', JSON.stringify(answersRef.current));
+    // Also update parent state
+    if (setAppState) {
+      setAppState({ answers: answersRef.current });
+    }
+  };
 
   const currentQuestion    = dimQuestions[qIndex];
   const isLastInDim        = qIndex === dimQuestions.length - 1;
@@ -615,9 +694,22 @@ export default function SAPIQuiz({ appState, setCurrentPage }) {
   // reset qIndex when dimension changes
   // (handled by setCurrentPage flow; component remounts)
 
-  function handleSelect(score) {
+  function handleSelect(score, optionIndex) {
     setSelectedScore(score);
-    console.log("Selected score:", score);
+    // Store answer with question ID, selected option letter, and score
+    const currentQ = dimQuestions[qIndex];
+    const optionLetter = ['a', 'b', 'c', 'd', 'e'][optionIndex] || 'a';
+    const newAnswer = {
+      [currentQ.id]: {
+        questionId: currentQ.id,
+        selectedOption: optionLetter,
+        score: score,
+        dimIndex: dimIndex
+      }
+    };
+    // Save to localStorage and update state
+    saveAnswer(newAnswer);
+    console.log("Selected:", { questionId: currentQ.id, option: optionLetter, score, totalAnswers: Object.keys(answersRef.current).length });
   }
 
   function handleBack() {
@@ -628,7 +720,7 @@ export default function SAPIQuiz({ appState, setCurrentPage }) {
     }
   }
 
-  function handleNext() {
+  async function handleNext() {
     if (selectedScore == null) return;
 
     if (!isLastInDim) {
@@ -642,9 +734,12 @@ export default function SAPIQuiz({ appState, setCurrentPage }) {
         navigate('/dimintro');
       }
     } else {
-      // Last question of last dimension - go to calculating
+      // Last question of last dimension - submit and go to calculating
       if (setCurrentPage) {
-        setCurrentPage('calculating');
+        // Get all answers from local ref (guaranteed to be up-to-date)
+        const allAnswers = answersRef.current;
+        console.log('Submitting all answers:', Object.keys(allAnswers).length, allAnswers);
+        await setCurrentPage('calculating', allAnswers);
       } else {
         navigate('/calculating');
       }
@@ -652,7 +747,7 @@ export default function SAPIQuiz({ appState, setCurrentPage }) {
   }
 
   // Overall progress numbers
-  const questionsBeforeDim = getQuestionsBeforeDim(dimIndex);
+  const questionsBeforeDim = getQuestionsBeforeDim(dimIndex, allQuestions.length > 0 ? allQuestions : ALL_QUESTIONS);
   const globalQNum         = questionsBeforeDim + qIndex + 1;
   const dim                = DIMENSIONS[dimIndex];
 
@@ -662,6 +757,83 @@ export default function SAPIQuiz({ appState, setCurrentPage }) {
     : isLastDimension
       ? "Complete Assessment"
       : `Continue to ${DIMENSIONS[dimIndex + 1]?.name}`;
+
+  // Show loading state while fetching questions
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: C.void,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}>
+        <SAPIGlobe size={64} />
+        <div style={{
+          fontFamily: "system-ui, sans-serif",
+          fontSize: 14,
+          color: C.muted,
+          letterSpacing: "0.1em",
+          marginTop: 24,
+        }}>
+          Loading assessment questions…
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if API failed and we have no questions
+  if (error && allQuestions.length === 0) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: C.void,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 32,
+      }}>
+        <SAPIGlobe size={64} />
+        <div style={{
+          fontFamily: "'Georgia', serif",
+          fontSize: 18,
+          color: C.crimson,
+          marginTop: 24,
+          marginBottom: 16,
+        }}>
+          Unable to load questions
+        </div>
+        <div style={{
+          fontFamily: "system-ui, sans-serif",
+          fontSize: 13,
+          color: C.muted,
+          marginBottom: 24,
+          textAlign: "center",
+        }}>
+          {error}
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            background: C.gold,
+            color: C.void,
+            border: "none",
+            padding: "12px 32px",
+            fontFamily: "system-ui, sans-serif",
+            fontSize: 12,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            cursor: "pointer",
+            borderRadius: 3,
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -820,6 +992,7 @@ export default function SAPIQuiz({ appState, setCurrentPage }) {
             dimIndex={dimIndex}
             questionIndexInDim={qIndex}
             totalInDim={dimQuestions.length}
+            questionsBeforeDim={getQuestionsBeforeDim(dimIndex, allQuestions.length > 0 ? allQuestions : ALL_QUESTIONS)}
           />
         </div>
 
@@ -886,7 +1059,7 @@ export default function SAPIQuiz({ appState, setCurrentPage }) {
                 label={opt.label}
                 optIndex={i}
                 isSelected={selectedScore === opt.score}
-                onSelect={() => handleSelect(opt.score)}
+                onSelect={() => handleSelect(opt.score, i)}
               />
             ))}
           </div>

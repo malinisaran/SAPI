@@ -112,7 +112,7 @@ function Rule() {
 }
 
 // ── Main component ───────────────────────────────────────────────────────────
-export default function SAPIBriefing() {
+export default function SAPIBriefing({ onBegin }) {
   const navigate = useNavigate();
 
   const [beginHover, setBeginHover] = useState(false);
@@ -126,7 +126,11 @@ export default function SAPIBriefing() {
   const countryFlag  = COUNTRY_FLAGS[country]  || "";
 
   function handleBegin() {
-    navigate('/dimintro');
+    if (onBegin) {
+      onBegin();
+    } else {
+      navigate('/dimintro');
+    }
   }
 
   function handleBack() {

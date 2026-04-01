@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { getAssessmentResults } from "../services/assessmentService";
 
 // ── Colour palette ────────────────────────────────────────────────────────────
 const C = {
@@ -308,7 +309,8 @@ function PeerComparisonStrip({ compositeScore }) {
   );
 }
 
-// ── Dimension Card ────────────────────────────────────────────────────────────
+// ── Number font constant ────────────────────────────────────────────────────
+const NUMBER_FONT = "'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace";
 function DimCard({ dim, score, onClick }) {
   const [hover, setHover] = useState(false);
   const band = getBand(score);
@@ -355,8 +357,9 @@ function DimCard({ dim, score, onClick }) {
       </div>
 
       <div style={{
-        fontFamily: "Georgia, serif", fontSize: 30,
+        fontFamily: NUMBER_FONT, fontSize: 30,
         color: C.paleGold, lineHeight: 1, marginBottom: 12,
+        fontWeight: 500, letterSpacing: "0.02em",
       }}>
         {score.toFixed(1)}
       </div>
@@ -395,39 +398,122 @@ function SectionLabel({ children }) {
   );
 }
 
-// ── Demo state ────────────────────────────────────────────────────────────────
-const DEMO_STATE = {
-  orgProfile: {
-    nationName: "United Kingdom",
-    assessmentDate: new Date().toLocaleDateString("en-GB", {
-      day: "numeric", month: "long", year: "numeric",
-    }),
-  },
-  scores: { D1: 62.4, D2: 48.7, D3: 71.2, D4: 38.5, D5: 54.3 },
-  compositeScore: 54.6,
-};
-
 // ── P7 Main ───────────────────────────────────────────────────────────────────
 export default function SAPIResults() {
-  // eslint-disable-next-line no-unused-vars
   const navigate = useNavigate();
+  const location = useLocation();
   
-  // Using demo state since we're not passing appState
-  const appState = DEMO_STATE;
-  const { compositeScore, scores, orgProfile } = appState;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [apiResults, setApiResults] = useState(location.state?.results || null);
+  const [assessmentId, setAssessmentId] = useState(location.state?.assessmentId || null);
+  
+  // Fetch results from API if not available in state
+  useEffect(() => {
+    const fetchResults = async () => {
+      // Always use localStorage as the source of truth for assessment ID
+      const id = localStorage.getItem('sapi_assessment_id') || location.state?.assessmentId;
+      
+      // If we have results in state and matching ID, use them
+      if (location.state?.results && location.state?.assessmentId === id) {
+        setApiResults(location.state.results);
+        setAssessmentId(id);
+        setLoading(false);
+        return;
+      }
+      
+      if (!id) {
+        setError('No assessment ID found. Please complete the assessment first.');
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        setAssessmentId(id);
+        const response = await getAssessmentResults(id);
+        if (response.success) {
+          setApiResults(response.data);
+        } else {
+          setError(response.error || 'Failed to load results');
+        }
+      } catch (err) {
+        setError(err.message || 'Failed to load results');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchResults();
+  }, [location.state]);
+  
+  // Map API response to component format
+  const appState = useMemo(() => {
+    if (apiResults) {
+      return {
+        orgProfile: {
+          nationName: "United Kingdom",
+          assessmentDate: new Date().toLocaleDateString("en-GB", {
+            day: "numeric", month: "long", year: "numeric",
+          }),
+        },
+        scores: {
+          D1: apiResults.compute_capacity,
+          D2: apiResults.capital_formation,
+          D3: apiResults.regulatory_readiness,
+          D4: apiResults.data_sovereignty,
+          D5: apiResults.directed_intelligence,
+        },
+        compositeScore: apiResults.sapi_score,
+        tier: apiResults.tier,
+      };
+    }
+    return null;
+  }, [apiResults]);
 
-  const tier = getTier(compositeScore ?? 0);
-  const dimScores = DIMENSIONS.map(d => scores?.[d.shortCode] ?? 0);
-
+  // Calculate derived values always (before any early returns)
+  const tier = useMemo(() => appState ? getTier(Number(appState.compositeScore) ?? 0) : null, [appState]);
+  const dimScores = useMemo(() => appState ? DIMENSIONS.map(d => Number(appState.scores?.[d.shortCode]) || 0) : [], [appState]);
   const ranked = useMemo(() =>
-    DIMENSIONS.map((d, i) => ({ ...d, score: dimScores[i] }))
-      .sort((a, b) => b.score - a.score),
-    [dimScores]
+    appState ? DIMENSIONS.map((d, i) => ({ ...d, score: Number(dimScores[i]) || 0 })).sort((a, b) => b.score - a.score) : [],
+    [dimScores, appState]
   );
-
   const highest = ranked[0];
   const secondHighest = ranked[1];
   const lowest = ranked[ranked.length - 1];
+
+  // Return loading or error state if no data
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", background: C.void, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: C.paleGold, fontFamily: "system-ui, sans-serif", fontSize: 14 }}>
+          Loading results...
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !appState) {
+    return (
+      <div style={{ minHeight: "100vh", background: C.void, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40 }}>
+        <div style={{ color: C.crimson, fontFamily: "Georgia, serif", fontSize: 18, marginBottom: 16 }}>
+          {error || "Unable to load assessment results"}
+        </div>
+        <button 
+          onClick={() => navigate('/')}
+          style={{
+            background: C.gold, color: C.void, border: "none", padding: "12px 24px",
+            fontFamily: "system-ui, sans-serif", fontSize: 12, cursor: "pointer", borderRadius: 3
+          }}
+        >
+          Start New Assessment
+        </button>
+      </div>
+    );
+  }
+
+  const compositeScore = appState.compositeScore != null ? Number(appState.compositeScore) : null;
+  const scores = appState.scores;
+  const orgProfile = appState.orgProfile;
 
   const nationName = orgProfile?.nationName || "Your nation";
   const date = orgProfile?.assessmentDate ||
@@ -530,9 +616,10 @@ export default function SAPIResults() {
 
             {/* Giant number */}
             <div style={{
-              fontFamily: "Georgia, serif", fontSize: 90,
+              fontFamily: NUMBER_FONT, fontSize: 90,
               color: C.paleGold, lineHeight: 0.9,
-              letterSpacing: "-0.03em", marginBottom: 22,
+              letterSpacing: "-0.02em", marginBottom: 22,
+              fontWeight: 500,
             }}>
               {compositeScore != null ? compositeScore.toFixed(1) : "—"}
             </div>
@@ -646,7 +733,7 @@ export default function SAPIResults() {
             margin: 0, letterSpacing: "0.015em",
           }}>
             {nationName} has achieved a composite SAPI score of{" "}
-            <strong style={{ color: C.paleGold, fontWeight: 400 }}>
+            <strong style={{ color: C.paleGold, fontWeight: 500, fontFamily: NUMBER_FONT }}>
               {compositeScore?.toFixed(1)}
             </strong>,
             placing it in the{" "}
@@ -654,13 +741,13 @@ export default function SAPIResults() {
             The primary constraint on sovereign AI capacity is{" "}
             <em style={{ color: C.parchment }}>{lowest.name}</em>,
             which scored{" "}
-            <span style={{ color: getBand(lowest.score).color }}>{lowest.score.toFixed(1)}</span>.
+            <span style={{ color: getBand(lowest.score).color, fontFamily: NUMBER_FONT }}>{lowest.score.toFixed(1)}</span>.
             Relative strengths were identified in{" "}
             <em style={{ color: C.parchment }}>{highest.name}</em>
-            {" "}(<span style={{ color: C.paleGold }}>{highest.score.toFixed(1)}</span>)
+            {" "}(<span style={{ color: C.paleGold, fontFamily: NUMBER_FONT }}>{highest.score.toFixed(1)}</span>)
             {" "}and{" "}
             <em style={{ color: C.parchment }}>{secondHighest.name}</em>
-            {" "}(<span style={{ color: C.paleGold }}>{secondHighest.score.toFixed(1)}</span>).
+            {" "}(<span style={{ color: C.paleGold, fontFamily: NUMBER_FONT }}>{secondHighest.score.toFixed(1)}</span>).
             The 12–18 month roadmap below identifies priority interventions aligned to these findings.
           </p>
         </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { submitAssessment } from "../services/assessmentService";
 
 // ── Colour palette ────────────────────────────────────────────────────────────
 const C = {
@@ -134,14 +135,74 @@ function DimBar({ dim, score, active, staggerIndex }) {
 // ── P6 Main Component ─────────────────────────────────────────────────────────
 export default function SAPICalculating() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [barsActive,     setBarsActive]     = useState(false);
   const [completeActive, setCompleteActive] = useState(false);
+  const [assessmentResults, setAssessmentResults] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+  const [_error, setError] = useState(null);
 
-  // Compute scores once on mount (synchronous — fast)
-  const { dimScores, composite } = useMemo(
-    () => computeAllScores({}), // Mock empty answers
-    []
-  );
+  // Get answers from navigation state and memoize
+  const answers = useMemo(() => location.state?.answers || {}, [location.state]);
+
+  // Submit to API and calculate scores
+  useEffect(() => {
+    const submitAndCalculate = async () => {
+      try {
+        // Transform answers to API format
+        const answerArray = Object.entries(answers).map(([questionId, data]) => ({
+          question_id: parseInt(questionId.replace('Q', '')),
+          selected_option: data.selectedOption || 'a'
+        }));
+
+        if (answerArray.length === 0) {
+          // No answers, use mock data for demo
+          console.log("No answers provided, using demo data");
+          return;
+        }
+
+        // Submit to backend
+        const response = await submitAssessment(answerArray);
+        if (response.success) {
+          setAssessmentResults(response.data);
+          // Store assessment ID for later retrieval
+          if (response.data.assessment_id) {
+            localStorage.setItem('sapi_assessment_id', response.data.assessment_id);
+          }
+        } else {
+          setError("Failed to calculate scores");
+        }
+      } catch (err) {
+        console.error("Assessment submission error:", err);
+        setError(err.message);
+      }
+    };
+
+    submitAndCalculate();
+  }, [answers]);
+
+  // Use API results or fallback to local calculation
+  const { dimScores, composite } = useMemo(() => {
+    if (assessmentResults) {
+      // Use API results
+      return {
+        dimScores: [
+          assessmentResults.compute_capacity,
+          assessmentResults.capital_formation,
+          assessmentResults.regulatory_readiness,
+          assessmentResults.data_sovereignty,
+          assessmentResults.directed_intelligence
+        ],
+        composite: assessmentResults.sapi_score
+      };
+    }
+    // Fallback: compute locally from answers
+    return computeAllScores(
+      Object.fromEntries(
+        Object.entries(answers).map(([k, v]) => [k, v.score || 0])
+      )
+    );
+  }, [assessmentResults, answers]);
   // eslint-disable-next-line no-unused-vars
   const tier = useMemo(() => getTier(composite), [composite]);
 
@@ -152,15 +213,31 @@ export default function SAPICalculating() {
     // "Assessment complete." appears ~2.7s in
     const t2 = setTimeout(() => setCompleteActive(true), 2700);
 
-    // Commit results and navigate at 3.6s
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  // Separate effect that triggers when assessmentResults is ready
+  useEffect(() => {
+    if (!assessmentResults) return;
+    
+    // Navigate to results once we have the API response
     const t3 = setTimeout(() => {
-      // In real app would commit to global state
-      navigate('/results');
+      const assessmentId = assessmentResults.assessment_id;
+      navigate('/results', { 
+        state: { 
+          results: assessmentResults,
+          assessmentId: assessmentId,
+          answers: answers,
+          dimScores: dimScores,
+          composite: composite,
+          tier: tier
+        } 
+      });
     }, 3600);
 
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    return () => { clearTimeout(t3); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [assessmentResults]);
 
   return (
     <div style={{

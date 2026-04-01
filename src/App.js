@@ -21,6 +21,19 @@ function ScrollToTop() {
   return null;
 }
 
+// Wrapper component to handle briefing navigation - resets dimension to 0
+function BriefingWrapper({ setCurrentDimension }) {
+  const navigate = useNavigate();
+  
+  const handleBegin = () => {
+    setCurrentDimension(0); // Reset to dimension 1 when starting
+    localStorage.removeItem('sapi_answers'); // Clear previous answers
+    navigate('/dimintro');
+  };
+  
+  return <SAPIBriefing onBegin={handleBegin} />;
+}
+
 // Wrapper component to handle dimension navigation
 function DimIntroWrapper({ currentDimension, setCurrentDimension }) {
   const navigate = useNavigate();
@@ -44,22 +57,49 @@ function DimIntroWrapper({ currentDimension, setCurrentDimension }) {
 function QuizWrapper({ currentDimension, setCurrentDimension }) {
   const navigate = useNavigate();
   const [answers, setAnswers] = useState({});
+  const [assessmentResults, setAssessmentResults] = useState(null);
+  
+  const submitToApi = async (allAnswers) => {
+    try {
+      const { submitAssessment } = await import('./services/assessmentService');
+      const answerArray = Object.entries(allAnswers).map(([questionId, data]) => ({
+        question_id: parseInt(questionId.replace('Q', '')),
+        selected_option: data.selectedOption
+      }));
+      const response = await submitAssessment(answerArray);
+      if (response.success) {
+        setAssessmentResults(response.data);
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Assessment submission failed:', error);
+      // Fallback: calculate locally
+      return null;
+    }
+  };
   
   return (
     <SAPIQuiz 
       appState={{ currentDimension, answers }}
       setAppState={(newState) => {
-        setAnswers(newState.answers || answers);
-        if (newState.currentDimension !== undefined) {
-          setCurrentDimension(newState.currentDimension);
+        // Merge new answers with existing ones using functional update
+        if (newState.answers) {
+          setAnswers(prevAnswers => ({
+            ...prevAnswers,
+            ...newState.answers
+          }));
         }
       }}
-      setCurrentPage={(page) => {
+      setCurrentPage={async (page, finalAnswers) => {
         if (page === 'dimIntro') {
           setCurrentDimension(currentDimension + 1);
           navigate('/dimintro');
         } else if (page === 'calculating') {
-          navigate('/calculating');
+          // Submit assessment before navigating
+          const allAnswers = finalAnswers || answers;
+          console.log('Submitting answers:', Object.keys(allAnswers).length, allAnswers);
+          await submitToApi(allAnswers);
+          navigate('/calculating', { state: { answers: allAnswers } });
         }
       }}
     />
@@ -76,7 +116,7 @@ function App() {
         <Routes>
           <Route path="/" element={<SAPILanding />} />
           <Route path="/preview" element={<SAPIPreview />} />
-          <Route path="/briefing" element={<SAPIBriefing />} />
+          <Route path="/briefing" element={<BriefingWrapper setCurrentDimension={setCurrentDimension} />} />
           <Route 
             path="/dimintro" 
             element={<DimIntroWrapper 
