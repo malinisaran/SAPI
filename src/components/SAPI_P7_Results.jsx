@@ -406,6 +406,7 @@ export default function SAPIResults() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [apiResults, setApiResults] = useState(location.state?.results || null);
+  // eslint-disable-next-line no-unused-vars
   const [assessmentId, setAssessmentId] = useState(location.state?.assessmentId || null);
   
   // Fetch results from API if not available in state
@@ -512,6 +513,7 @@ export default function SAPIResults() {
   }
 
   const compositeScore = appState.compositeScore != null ? Number(appState.compositeScore) : null;
+  // eslint-disable-next-line no-unused-vars
   const scores = appState.scores;
   const orgProfile = appState.orgProfile;
 

@@ -57,6 +57,7 @@ function DimIntroWrapper({ currentDimension, setCurrentDimension }) {
 function QuizWrapper({ currentDimension, setCurrentDimension }) {
   const navigate = useNavigate();
   const [answers, setAnswers] = useState({});
+  // eslint-disable-next-line no-unused-vars
   const [assessmentResults, setAssessmentResults] = useState(null);
   
   const submitToApi = async (allAnswers) => {
