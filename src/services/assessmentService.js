@@ -3,15 +3,16 @@ const API_BASE_URL = process.env.REACT_APP_API_URL;
 /**
  * Submit assessment answers and get scores
  * POST /api/assessment/submit
+ * @param {Object} userProfile - User profile details { country, respondent_name, title, ministry_or_department, contact_email, development_stage }
  * @param {Array} answers - Array of { question_id, selected_option }
  */
-export async function submitAssessment(answers) {
+export async function submitAssessment(userProfile, answers) {
   const response = await fetch(`${API_BASE_URL}/api/assessment/submit`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ answers }),
+    body: JSON.stringify({ userProfile, answers }),
   });
   
   if (!response.ok) {

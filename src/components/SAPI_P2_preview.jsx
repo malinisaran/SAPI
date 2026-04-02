@@ -99,6 +99,18 @@ export default function App() {
     const errs = Object.fromEntries(allIds.map(id => [id, validate(id, form[id])]));
     setErrors(errs);
     if (Object.values(errs).some(Boolean)) return;
+    
+    // Save user profile to localStorage for API submission
+    const userProfile = {
+      country: selectedCountry?.label || form.country,
+      respondent_name: form.name,
+      title: form.title,
+      ministry_or_department: form.ministry,
+      contact_email: form.email,
+      development_stage: form.developmentStage
+    };
+    localStorage.setItem('sapi_user_profile', JSON.stringify(userProfile));
+    
     setSuccess(true);
     // Navigate to briefing after a short delay to show success message
     setTimeout(() => navigate('/briefing'), 2000);
