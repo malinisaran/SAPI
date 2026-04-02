@@ -310,45 +310,8 @@ function dimMeta(key) {
 }
 
 // ── Roadmap derivation ────────────────────────────────────────────────────────
-function deriveRoadmap(scores) {
-  // scores = { "Compute Capacity": 38, "Capital Formation": 55, ... }
-  const ranked = Object.entries(scores)
-    .map(([key, score]) => ({ key, score }))
-    .sort((a, b) => a.score - b.score);
-
-  const bottom3 = ranked.slice(0, 3);
-
-  const phases = [
-    { label: "Quick Wins",              timeline: "0 – 3 months",   cards: [] },
-    { label: "Structural Improvements", timeline: "3 – 12 months",  cards: [] },
-    { label: "Strategic Initiatives",   timeline: "12 – 18 months", cards: [] },
-  ];
-
-  bottom3.forEach(({ key, score }) => {
-    const band   = getBand(score);
-    const items  = LIBRARY[key]?.[band] || [];
-    const meta   = dimMeta(key);
-    const target = scoreTarget(score, band);
-
-    items.forEach((item, phaseIndex) => {
-      if (phaseIndex < 3) {
-        phases[phaseIndex].cards.push({
-          dimKey:   key,
-          dimCode:  meta.shortCode,
-          dimColor: meta.color,
-          band,
-          score,
-          target,
-          title:    item.title,
-          desc:     item.desc,
-        });
-      }
-    });
-  });
-
-  const priorityPanel = phases[0].cards; // first card from each bottom-3 dim
-  return { bottom3, phases, priorityPanel };
-}
+// eslint-disable-next-line no-unused-vars
+const deriveRoadmap = null; // Replaced by API integration
 
 // ── Phase column colours ──────────────────────────────────────────────────────
 const PHASE_ACCENT = [C.emerald, C.blue, C.gold];
@@ -424,27 +387,6 @@ export default function SAPIRoadmap() {
     
     fetchData();
   }, []);
-  
-  // Build scores object from API data for display
-  const scores = useMemo(() => {
-    if (!roadmapData?.dimension_scorecard) return {};
-    
-    const scoreMap = {};
-    roadmapData.dimension_scorecard.forEach(dim => {
-      const keyMap = {
-        "Compute Capacity": "Compute Capacity",
-        "Capital Formation": "Capital Formation", 
-        "Regulatory Readiness": "Regulatory Readiness",
-        "Data Sovereignty": "Data Sovereignty",
-        "Directed Intelligence Maturity": "Directed Intelligence Maturity"
-      };
-      const key = keyMap[dim.dimension_name];
-      if (key) {
-        scoreMap[key] = Number(dim.score) || 0;
-      }
-    });
-    return scoreMap;
-  }, [roadmapData]);
   
   const compositeScore = roadmapData?.dimension_scorecard 
     ? Math.round(roadmapData.dimension_scorecard.reduce((sum, d) => sum + (Number(d.score) || 0), 0) / roadmapData.dimension_scorecard.length)

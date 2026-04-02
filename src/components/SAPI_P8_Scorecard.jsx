@@ -162,6 +162,7 @@ function getScoreColor(score) {
 }
 
 // ── Demo state (used when no real appState is passed) ─────────────────────────
+// eslint-disable-next-line no-unused-vars
 const DEMO_ANSWERS = {
   Q1: 75, Q2: 40, Q3: 65, Q4: 50, Q5: 75,      // D1 avg ~61
   Q6: 50, Q7: 40, Q8: 25, Q9: 35, Q10: 70, Q11: 50, // D2 avg ~45
@@ -170,8 +171,10 @@ const DEMO_ANSWERS = {
   Q25: 50, Q26: 35, Q27: 65, Q28: 40, Q29: 70, Q30: 55, // D5 avg ~52.5
 };
 
+// eslint-disable-next-line no-unused-vars
 const DEMO_SCORES = { D1: 61.0, D2: 45.0, D3: 70.0, D4: 35.8, D5: 52.5 };
 
+// eslint-disable-next-line no-unused-vars
 const DEMO_PROFILE = {
   nationName: "United Kingdom",
   assessmentDate: new Date().toLocaleDateString("en-GB", {
