@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAssessmentResults } from "../services/assessmentService";
 
 // ── Logo Component ──────────────────────────────────────────────────────────
 function SAPIGlobe({ size = 32 }) {
@@ -293,8 +294,52 @@ function SectionLabel({ children }) {
 }
 
 // ── Main exported component ──────────────────────────────────────────────────
-export default function SAPIPeerComparison({ appState, setAppState, setCurrentPage }) {
+export default function SAPIPeerComparison({ appState: passedState, setAppState, setCurrentPage }) {
   const navigate = useNavigate();
+  
+  // API data states
+  const [apiData, setApiData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Fetch results from API on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      const assessmentId = localStorage.getItem('sapi_assessment_id');
+      if (!assessmentId) {
+        setError('No assessment found. Please complete the assessment first.');
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const response = await getAssessmentResults(assessmentId);
+        if (response.success) {
+          setApiData(response.data);
+        } else {
+          setError(response.error || 'Failed to load peer comparison data');
+        }
+      } catch (err) {
+        setError(err.message || 'Failed to load peer comparison data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Merge API data with passed state
+  const appState = passedState || (apiData ? {
+    scores: {
+      D1: Number(apiData.compute_capacity) || 0,
+      D2: Number(apiData.capital_formation) || 0,
+      D3: Number(apiData.regulatory_readiness) || 0,
+      D4: Number(apiData.data_sovereignty) || 0,
+      D5: Number(apiData.directed_intelligence) || 0,
+    },
+    orgProfile: { developmentStage: "Developing" },
+  } : null);
   
   // eslint-disable-next-line no-unused-vars
   const nav = (page) => {
@@ -305,7 +350,35 @@ export default function SAPIPeerComparison({ appState, setAppState, setCurrentPa
   const [upgradeHover, setUpgradeHover] = useState(false);
   const [backHover,    setBackHover]    = useState(false);
 
-  const { scores = {}, orgProfile = {} } = appState || {};
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", background: C.void, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <SAPIGlobe size={64} />
+        <div style={{ fontFamily: "system-ui, sans-serif", fontSize: 14, color: C.muted, letterSpacing: "0.1em", marginTop: 24 }}>
+          Loading peer comparison data…
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !appState) {
+    return (
+      <div style={{ minHeight: "100vh", background: C.void, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40 }}>
+        <SAPIGlobe size={64} />
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 18, color: C.crimson, marginTop: 24, marginBottom: 16 }}>
+          {error || "Unable to load peer comparison"}
+        </div>
+        <button 
+          onClick={() => navigate('/')}
+          style={{ background: C.gold, color: C.void, border: "none", padding: "12px 24px", fontFamily: "system-ui, sans-serif", fontSize: 12, cursor: "pointer", borderRadius: 3 }}
+        >
+          Start New Assessment
+        </button>
+      </div>
+    );
+  }
+
+  const { scores = {}, orgProfile = {} } = appState;
   const stage = orgProfile.developmentStage || "Developing";
 
   // Resolve peer benchmarks (fallback to Developing if stage not found)

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAssessmentResults } from "../services/assessmentService";
 
 // ── Colour palette ────────────────────────────────────────────────────────────
 const C = {
@@ -280,7 +281,7 @@ function SubIndicatorRow({ name, score, isPrimaryGap }) {
         textAlign: "right",
         opacity: isPrimaryGap ? 1 : 0.85,
       }}>
-        {score.toFixed(0)}
+        {Number(score).toFixed(0)}
       </div>
     </div>
   );
@@ -372,7 +373,7 @@ function DimensionPanel({ dim, dimScore, answers, isOpen, onToggle }) {
             color: isOpen ? band.color : C.paleGold,
             lineHeight: 1,
           }}>
-            {dimScore.toFixed(1)}
+            {Number(dimScore).toFixed(1)}
           </div>
           <div style={{
             fontFamily: "system-ui, sans-serif",
@@ -462,7 +463,7 @@ function DimensionPanel({ dim, dimScore, answers, isOpen, onToggle }) {
                 lineHeight: 1,
                 marginBottom: 4,
               }}>
-                {dimScore.toFixed(1)}
+                {Number(dimScore).toFixed(1)}
               </div>
               <div style={{
                 fontFamily: "system-ui, sans-serif",
@@ -534,7 +535,7 @@ function DimensionPanel({ dim, dimScore, answers, isOpen, onToggle }) {
                   <strong style={{ fontWeight: 500 }}>
                     {primaryGap.name}
                   </strong>{" "}
-                  ({primaryGapScore.toFixed(0)})
+                  ({Number(primaryGapScore).toFixed(0)})
                 </span>
               </div>
             </div>
@@ -625,8 +626,71 @@ function Rule() {
 
 // ── P8 Main ───────────────────────────────────────────────────────────────────
 export default function SAPIScorecard({ appState: passedState, setAppState, setCurrentPage }) {
-  const appState = passedState || { answers: DEMO_ANSWERS, scores: DEMO_SCORES, orgProfile: DEMO_PROFILE };
-  const { answers = {}, scores = {}, orgProfile = {} } = appState;
+  const navigate = useNavigate();
+  
+  // API data states
+  const [apiData, setApiData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Fetch results from API on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      const assessmentId = localStorage.getItem('sapi_assessment_id');
+      if (!assessmentId) {
+        setError('No assessment found. Please complete the assessment first.');
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const response = await getAssessmentResults(assessmentId);
+        if (response.success) {
+          setApiData(response.data);
+        } else {
+          setError(response.error || 'Failed to load scorecard data');
+        }
+      } catch (err) {
+        setError(err.message || 'Failed to load scorecard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Transform API response to component format
+  const appState = passedState || (apiData ? {
+    answers: transformApiAnswers(apiData),
+    scores: {
+      D1: apiData.compute_capacity,
+      D2: apiData.capital_formation,
+      D3: apiData.regulatory_readiness,
+      D4: apiData.data_sovereignty,
+      D5: apiData.directed_intelligence,
+    },
+    orgProfile: {
+      nationName: "United Kingdom",
+      assessmentDate: new Date().toLocaleDateString("en-GB", {
+        day: "numeric", month: "long", year: "numeric",
+      }),
+    },
+  } : null);
+  
+  // Helper to transform API answers to component format
+  function transformApiAnswers(data) {
+    // Map question scores from API to Q1, Q2, etc. format
+    const answers = {};
+    if (data.question_scores) {
+      data.question_scores.forEach((qs, index) => {
+        answers[`Q${index + 1}`] = qs.score;
+      });
+    }
+    return answers;
+  }
+  
+  const { answers = {}, scores = {}, orgProfile = {} } = appState || {};
 
   const nationName = orgProfile?.nationName || "Your Nation";
   const date = orgProfile?.assessmentDate ||
@@ -639,8 +703,6 @@ export default function SAPIScorecard({ appState: passedState, setAppState, setC
     setOpenDims(prev => ({ ...prev, [code]: !prev[code] }));
   }
 
-  const navigate = useNavigate();
-  
   const nav = (page) => {
     if (typeof setCurrentPage === "function") setCurrentPage(page);
     navigate(`/${page}`);
@@ -659,6 +721,34 @@ export default function SAPIScorecard({ appState: passedState, setAppState, setC
       DIMENSIONS.forEach(d => { newState[d.code] = true; });
       setOpenDims(newState);
     }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", background: C.void, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <SAPILogo size={64} />
+        <div style={{ fontFamily: "system-ui, sans-serif", fontSize: 14, color: C.muted, letterSpacing: "0.1em", marginTop: 24 }}>
+          Loading scorecard data…
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !appState) {
+    return (
+      <div style={{ minHeight: "100vh", background: C.void, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40 }}>
+        <SAPILogo size={64} />
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 18, color: C.crimson, marginTop: 24, marginBottom: 16 }}>
+          {error || "Unable to load scorecard"}
+        </div>
+        <button 
+          onClick={() => navigate('/')}
+          style={{ background: C.gold, color: C.void, border: "none", padding: "12px 24px", fontFamily: "system-ui, sans-serif", fontSize: 12, cursor: "pointer", borderRadius: 3 }}
+        >
+          Start New Assessment
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -896,7 +986,7 @@ export default function SAPIScorecard({ appState: passedState, setAppState, setC
                   lineHeight: 1,
                   marginBottom: 4,
                 }}>
-                  {score.toFixed(1)}
+                  {Number(score).toFixed(1)}
                 </div>
                 <div style={{
                   fontFamily: "system-ui, sans-serif",

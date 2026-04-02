@@ -132,11 +132,11 @@ export default function App() {
     </svg>
   );
 
-  const FieldLabel = ({ id, children }) => (
+  const FieldLabel = ({ id, children, required }) => (
     <label style={{ display:"block", fontFamily:"system-ui,sans-serif", fontSize:10, letterSpacing:"0.2em",
       textTransform:"uppercase", color: errors[id] && touched[id] ? C.crimson : C.muted,
       marginBottom:9, transition:"color 0.15s" }}>
-      {children}
+      {children}{required && <span style={{ color: C.crimson, marginLeft: 4 }}>*</span>}
     </label>
   );
 
@@ -236,7 +236,7 @@ export default function App() {
 
           {/* Country dropdown */}
           <div ref={countryRef}>
-            <FieldLabel id="country">Country / Nation</FieldLabel>
+            <FieldLabel id="country" required>Country / Nation</FieldLabel>
             <button type="button" style={triggerStyle("country", countryOpen)}
               onClick={() => { setCountryOpen(o => !o); setStageOpen(false); setTouched(p => ({ ...p, country:true })); }}>
               <span style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -277,7 +277,7 @@ export default function App() {
           {/* Text / email fields */}
           {TEXT_FIELDS.map(({ id, label, type, placeholder }) => (
             <div key={id}>
-              <FieldLabel id={id}>{label}</FieldLabel>
+              <FieldLabel id={id} required>{label}</FieldLabel>
               <input type={type} value={form[id]} placeholder={placeholder} style={inputBase(id)}
                 onFocus={() => setFocusedField(id)}
                 onBlur={() => handleBlur(id)}
@@ -289,7 +289,7 @@ export default function App() {
 
           {/* Development Stage dropdown */}
           <div ref={stageRef}>
-            <FieldLabel id="developmentStage">Development Stage</FieldLabel>
+            <FieldLabel id="developmentStage" required>Development Stage</FieldLabel>
             <button type="button" style={triggerStyle("developmentStage", stageOpen)}
               onClick={() => { setStageOpen(o => !o); setCountryOpen(false); setTouched(p => ({ ...p, developmentStage:true })); }}>
               <span>{form.developmentStage || "Select your development stage"}</span>

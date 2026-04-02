@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { generateRoadmap } from "../services/roadmapService";
+import { getAssessmentResults } from "../services/assessmentService";
 
 // ── Logo Component ──────────────────────────────────────────────────────────
 function SAPIGlobe({ size = 32 }) {
@@ -360,22 +362,215 @@ export default function SAPIRoadmap() {
   const navigate = useNavigate();
   // eslint-disable-next-line no-unused-vars
   const [currentPage, setCurrentPage] = useState("overview");
-
-  const scores = useMemo(() => ({
-    "Compute Capacity":               35,
-    "Capital Formation":              52,
-    "Regulatory Readiness":           28,
-    "Data Sovereignty":               61,
-    "Directed Intelligence Maturity": 41,
-  }), []);
   
-  const compositeScore = 42;
-  const country        = "United Arab Emirates";
+  // API data states
+  const [roadmapData, setRoadmapData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Fetch assessment results and generate roadmap
+  useEffect(() => {
+    const fetchData = async () => {
+      const assessmentId = localStorage.getItem('sapi_assessment_id');
+      if (!assessmentId) {
+        setError('No assessment found. Please complete the assessment first.');
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        // First get assessment results for scores
+        const assessmentResponse = await getAssessmentResults(assessmentId);
+        if (!assessmentResponse.success) {
+          setError(assessmentResponse.error || 'Failed to load assessment data');
+          setLoading(false);
+          return;
+        }
+        
+        const apiData = assessmentResponse.data;
+        
+        // Calculate composite score
+        const scores = [
+          Number(apiData.compute_capacity) || 0,
+          Number(apiData.capital_formation) || 0,
+          Number(apiData.regulatory_readiness) || 0,
+          Number(apiData.data_sovereignty) || 0,
+          Number(apiData.directed_intelligence) || 0,
+        ];
+        const sapiScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length * 10) / 10;
+        
+        // Prepare dimension scores for roadmap API
+        const dimensionScores = {
+          1: Number(apiData.compute_capacity) || 0,
+          2: Number(apiData.capital_formation) || 0,
+          3: Number(apiData.regulatory_readiness) || 0,
+          4: Number(apiData.data_sovereignty) || 0,
+          5: Number(apiData.directed_intelligence) || 0,
+        };
+        
+        // Call roadmap API with both dimensionScores and sapiScore
+        const roadmapResponse = await generateRoadmap(dimensionScores, sapiScore);
+        if (roadmapResponse.success) {
+          setRoadmapData(roadmapResponse.data);
+        } else {
+          setError(roadmapResponse.error || 'Failed to generate roadmap');
+        }
+      } catch (err) {
+        setError(err.message || 'Failed to load roadmap data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Build scores object from API data for display
+  const scores = useMemo(() => {
+    if (!roadmapData?.dimension_scorecard) return {};
+    
+    const scoreMap = {};
+    roadmapData.dimension_scorecard.forEach(dim => {
+      const keyMap = {
+        "Compute Capacity": "Compute Capacity",
+        "Capital Formation": "Capital Formation", 
+        "Regulatory Readiness": "Regulatory Readiness",
+        "Data Sovereignty": "Data Sovereignty",
+        "Directed Intelligence Maturity": "Directed Intelligence Maturity"
+      };
+      const key = keyMap[dim.dimension_name];
+      if (key) {
+        scoreMap[key] = Number(dim.score) || 0;
+      }
+    });
+    return scoreMap;
+  }, [roadmapData]);
+  
+  const compositeScore = roadmapData?.dimension_scorecard 
+    ? Math.round(roadmapData.dimension_scorecard.reduce((sum, d) => sum + (Number(d.score) || 0), 0) / roadmapData.dimension_scorecard.length)
+    : 0;
+  const country = "United Arab Emirates";
 
-  const { bottom3, phases, priorityPanel } = useMemo(
-    () => deriveRoadmap(scores),
-    [scores]
-  );
+  // Transform API roadmap data to component format
+  const { bottom3, phases, priorityPanel } = useMemo(() => {
+    if (!roadmapData) {
+      return { bottom3: [], phases: [], priorityPanel: [] };
+    }
+    
+    // Build bottom3 from priority_interventions
+    const bottom3List = (roadmapData.priority_interventions || []).map(pi => {
+      const dimNameMap = {
+        1: "Compute Capacity",
+        2: "Capital Formation",
+        3: "Regulatory Readiness", 
+        4: "Data Sovereignty",
+        5: "Directed Intelligence Maturity"
+      };
+      return {
+        key: dimNameMap[pi.dimension_id] || pi.dimension_name,
+        score: Number(pi.current_score) || 0
+      };
+    });
+    
+    // Build phases from action_plan
+    const actionPlan = roadmapData.action_plan || {};
+    const phasesList = [
+      { label: "Quick Wins", timeline: "0 – 3 months", cards: [] },
+      { label: "Structural Improvements", timeline: "3 – 12 months", cards: [] },
+      { label: "Strategic Initiatives", timeline: "12 – 18 months", cards: [] }
+    ];
+    
+    // Map actions to cards
+    const dimMetaMap = {
+      "Compute Capacity": { shortCode: "D1", color: C.blue },
+      "Capital Formation": { shortCode: "D2", color: C.amber },
+      "Regulatory Readiness": { shortCode: "D3", color: C.gold },
+      "Data Sovereignty": { shortCode: "D4", color: C.emerald },
+      "Directed Intelligence Maturity": { shortCode: "D5", color: C.muted }
+    };
+    
+    const quickWins = actionPlan.quick_wins?.actions || [];
+    const structural = actionPlan.structural_improvements?.actions || [];
+    const strategic = actionPlan.strategic_initiatives?.actions || [];
+    
+    // Helper to parse action string and create card
+    const createCardFromAction = (actionStr, score) => {
+      const match = actionStr.match(/^([^:]+):\s*(.+)$/);
+      if (match) {
+        const dimName = match[1].trim();
+        const title = match[2].trim();
+        const meta = dimMetaMap[dimName] || { shortCode: "D1", color: C.blue };
+        const band = getBand(score);
+        return {
+          dimKey: dimName,
+          dimCode: meta.shortCode,
+          dimColor: meta.color,
+          band,
+          score,
+          target: scoreTarget(score, band),
+          title,
+          desc: "" // API doesn't provide descriptions in action_plan
+        };
+      }
+      return null;
+    };
+    
+    // Get scores for dimensions
+    const scoreMap = {};
+    bottom3List.forEach(d => { scoreMap[d.key] = d.score; });
+    
+    // Fill phases
+    quickWins.forEach(action => {
+      const dimName = action.match(/^([^:]+):/)?.[1]?.trim();
+      const card = createCardFromAction(action, scoreMap[dimName] || 50);
+      if (card) phasesList[0].cards.push(card);
+    });
+    
+    structural.forEach(action => {
+      const dimName = action.match(/^([^:]+):/)?.[1]?.trim();
+      const card = createCardFromAction(action, scoreMap[dimName] || 50);
+      if (card) phasesList[1].cards.push(card);
+    });
+    
+    strategic.forEach(action => {
+      const dimName = action.match(/^([^:]+):/)?.[1]?.trim();
+      const card = createCardFromAction(action, scoreMap[dimName] || 50);
+      if (card) phasesList[2].cards.push(card);
+    });
+    
+    // Priority panel is first card from each dimension in quick wins
+    const priorityList = phasesList[0].cards.slice(0, 3);
+    
+    return { bottom3: bottom3List, phases: phasesList, priorityPanel: priorityList };
+  }, [roadmapData]);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", background: C.void, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <SAPIGlobe size={64} />
+        <div style={{ fontFamily: "system-ui, sans-serif", fontSize: 14, color: C.muted, letterSpacing: "0.1em", marginTop: 24 }}>
+          Generating your roadmap…
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ minHeight: "100vh", background: C.void, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40 }}>
+        <SAPIGlobe size={64} />
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 18, color: C.crimson, marginTop: 24, marginBottom: 16 }}>
+          {error}
+        </div>
+        <button 
+          onClick={() => navigate('/')}
+          style={{ background: C.gold, color: C.void, border: "none", padding: "12px 24px", fontFamily: "system-ui, sans-serif", fontSize: 12, cursor: "pointer", borderRadius: 3 }}
+        >
+          Start New Assessment
+        </button>
+      </div>
+    );
+  }
 
   const lowestDim       = bottom3[0]?.key  || "—";
   const secondLowestDim = bottom3[1]?.key  || "—";
