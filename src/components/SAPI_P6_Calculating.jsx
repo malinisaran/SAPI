@@ -162,7 +162,8 @@ export default function SAPICalculating() {
         }
 
         // Submit to backend
-        const response = await submitAssessment(answerArray);
+        const userProfile = JSON.parse(localStorage.getItem('sapi_user_profile') || '{}');
+        const response = await submitAssessment(userProfile, answerArray);
         if (response.success) {
           setAssessmentResults(response.data);
           // Store assessment ID for later retrieval
