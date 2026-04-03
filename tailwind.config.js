@@ -13,7 +13,7 @@ module.exports = {
           gold: '#C9963A',
           paleGold: '#EDD98A',
           parchment: '#FBF5E6',
-          muted: '#9880B0',
+          muted: '#FFFFFF',
           emerald: '#28A868',
           amber: '#F0C050',
           crimson: '#C03058',

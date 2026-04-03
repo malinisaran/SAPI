@@ -404,18 +404,15 @@ export default function PreviewPage() {
         )}
 
         {/* CTA */}
-        <div className="mt-13">
+        <div className="mt-12">
           <button
             className={`w-full text-sapi-void border-none px-12 py-4 font-sans text-xs tracking-extra-wide uppercase font-medium cursor-pointer rounded-sm transition-colors duration-150 ${
               btnHover ? 'bg-[#B8862A]' : 'bg-sapi-gold'
             }`}
             onMouseEnter={() => setBtnHover(true)} onMouseLeave={() => setBtnHover(false)}
             onClick={handleSubmit}>
-            Continue to Assessment Briefing
+            Submit
           </button>
-          <div className="font-sans text-[11px] text-sapi-muted tracking-wide text-center mt-3.5 opacity-55 leading-relaxed">
-            All fields required &nbsp;·&nbsp; Data handled under restricted classification &nbsp;·&nbsp; No account required
-          </div>
         </div>
       </div>
 

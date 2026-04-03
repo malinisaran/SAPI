@@ -63,7 +63,7 @@ export default function LandingPage({ onBegin }) {
       <PageHeader showAdmin={true} />
 
       {/* ── Hero ── */}
-      <div className="px-8 pt-20 pb-16 max-w-container mx-auto border-b border-sapi-bronze">
+      <div className="px-8 pt-10 pb-16 max-w-container mx-auto border-b border-sapi-bronze">
         <div className="font-sans text-sm text-sapi-muted tracking-extra-wide uppercase mb-2">
           Sovereign AI Readiness Assessment · Free · 12 Minutes
         </div>
@@ -219,9 +219,6 @@ export default function LandingPage({ onBegin }) {
         >
           Begin Tier 1 Assessment
         </button>
-        <div className="font-sans text-[11px] text-sapi-muted tracking-extra-wide opacity-60 mt-1">
-          No account required &nbsp;·&nbsp; Results delivered immediately &nbsp;·&nbsp; No data retained without consent
-        </div>
       </div>
 
       {/* ── Footer ── */}

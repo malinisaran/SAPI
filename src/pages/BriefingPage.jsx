@@ -4,11 +4,11 @@ import { PageLayout, PageHeader, PageFooter } from "./common";
 
 // ── Dimension data ───────────────────────────────────────────────────────────
 const DIMENSIONS = [
-  { num: "01", name: "Compute Capacity",              questions: 5 },
-  { num: "02", name: "Capital Formation",              questions: 6 },
-  { num: "03", name: "Regulatory Readiness",           questions: 7 },
-  { num: "04", name: "Data Sovereignty",               questions: 6 },
-  { num: "05", name: "Directed Intelligence Maturity", questions: 6 },
+  { num: "01",  name: "Compute Capacity",               questions: 5 },
+  { num: "02",  name: "Capital Formation",              questions: 6 },
+  { num: "03",  name: "Regulatory Readiness",           questions: 7 },
+  { num: "04",  name: "Data Sovereignty",               questions: 6 },
+  { num: "05",  name: "Directed Intelligence Maturity", questions: 6 },
 ];
 
 const COUNTRY_LABELS = {
@@ -154,7 +154,7 @@ export default function BriefingPage({ onBegin }) {
         </h1>
 
         {/* Personalised greeting */}
-        <div className="bg-sapi-navy border-l-[3px] border-sapi-gold px-5 py-4.5 flex items-center gap-3.5 mb-11">
+        <div className="bg-sapi-navy border-l-[3px] border-sapi-gold px-8 pt-4 pb-4 flex items-center gap-3.5 mb-11">
           {countryFlag && (
             <span className="text-2xl leading-none flex-shrink-0">{countryFlag}</span>
           )}
@@ -180,10 +180,10 @@ export default function BriefingPage({ onBegin }) {
             { value: "5",       label: "Dimensions" },
           ].map(({ value, label }) => (
             <div key={label} className="bg-sapi-midnight border border-sapi-bronze border-b-2 border-b-sapi-bronze/40 px-5 py-5.5 text-center">
-              <div className="font-serif text-[32px] text-sapi-paleGold font-normal leading-none mb-2">
+              <div className="font-serif text-[32px] text-sapi-paleGold font-normal leading-none mb-2 mt-2 mb-2">
                 {value}
               </div>
-              <div className="font-sans text-[10px] text-sapi-muted tracking-extra-wide uppercase">
+              <div className="font-sans text-[10px] text-sapi-muted tracking-extra-wide uppercase mb-2">
                 {label}
               </div>
             </div>
@@ -200,13 +200,13 @@ export default function BriefingPage({ onBegin }) {
         <div className="flex flex-col gap-px mb-11 border border-sapi-bronze">
           {DIMENSIONS.map((d, i) => (
             <div key={d.num} className={`px-4.5 py-3.5 flex items-center gap-4 ${i % 2 === 0 ? 'bg-sapi-navy' : 'bg-sapi-midnight'} ${i < DIMENSIONS.length - 1 ? 'border-b border-sapi-bronze' : ''}`}>
-              <div className="font-serif text-xl text-sapi-gold font-normal leading-none opacity-65 w-7 flex-shrink-0">
+              <div className="font-serif text-xl text-sapi-gold font-normal leading-none opacity-65 w-7 flex-shrink-0 pl-2">
                 {d.num}
               </div>
               <div className="font-serif text-[13px] text-sapi-parchment flex-1">
                 {d.name}
               </div>
-              <div className="font-sans text-[11px] text-sapi-muted tracking-wide whitespace-nowrap">
+              <div className="font-sans text-[11px] text-sapi-muted tracking-wide whitespace-nowrap pr-3">
                 {d.questions} questions
               </div>
             </div>
@@ -242,7 +242,7 @@ export default function BriefingPage({ onBegin }) {
         <Rule />
 
         {/* ── Confidentiality box ── */}
-        <div className="border border-sapi-gold/25 border-l-[3px] border-l-sapi-gold bg-sapi-gold/5 px-5 py-4 mb-13">
+        <div className="border border-sapi-gold/25 border-l-[3px] border-l-sapi-gold bg-sapi-gold/5 px-5 py-4 mb-13 mt-10">
           <div className="font-sans text-[10px] tracking-extra-wide uppercase text-sapi-gold mb-2">
             Data Classification
           </div>
@@ -253,7 +253,7 @@ export default function BriefingPage({ onBegin }) {
         </div>
 
         {/* ── CTAs ── */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 mt-10">
           <button
             className={`w-full text-sapi-void border-none px-12 py-4 font-sans text-xs tracking-extra-wide uppercase font-medium cursor-pointer rounded-sm transition-colors duration-150 ${
               beginHover ? 'bg-[#B8862A]' : 'bg-sapi-gold'

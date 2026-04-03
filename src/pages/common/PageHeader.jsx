@@ -20,14 +20,6 @@ export function PageHeader({ showAdmin = true, rightContent }) {
         <div className="ml-auto font-serif text-[10px] tracking-extra-wide text-sapi-muted uppercase border border-sapi-bronze px-2.5 py-1">
           For Government & Sovereign Institutions
         </div>
-        {showAdmin && (
-          <button
-            onClick={() => navigate('/admin')}
-            className="font-sans text-[10px] tracking-extra-wide uppercase text-sapi-void bg-sapi-gold border border-sapi-gold px-3 py-1 cursor-pointer transition-all duration-150 hover:bg-[#B8862A] hover:text-sapi-void"
-          >
-            Admin
-          </button>
-        )}
         {rightContent}
       </div>
     </header>

@@ -438,6 +438,14 @@ export default function QuizPage({ appState, setAppState, setCurrentPage }) {
   const navigate = useNavigate();
   const didFetch = useRef(false);
 
+  // ── Route protection ───────────────────────────────────────────────────────
+  useEffect(() => {
+    const profile = localStorage.getItem('sapi_user_profile');
+    if (!profile) {
+      navigate('/preview', { replace: true });
+    }
+  }, [navigate]);
+
   const [allQuestions, setAllQuestions] = useState(ALL_QUESTIONS);
   const [selectedScore, setSelectedScore] = useState(null);
   const [selectedOptIndex, setSelectedOptIndex] = useState(null);
@@ -570,7 +578,7 @@ export default function QuizPage({ appState, setAppState, setCurrentPage }) {
     if (currentQuestionIndex > 0) {
       const dimAnswers = answers[currentDimension] || {};
       dimAnswers.currentQuestionIndex = currentQuestionIndex - 1;
-      delete dimAnswers[currentQuestion.id];
+      // Keep the answer when going back - don't delete it
 
       if (setAppState) {
         setAppState({

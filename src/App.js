@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import SAPILanding from './components/SAPI_P1_Landing';
-import SAPIPreview from './components/SAPI_P2_preview';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { LoginPage, RegisterPage, LandingPage, PreviewPage } from './pages';
 import SAPIBriefing from './components/SAPI_P3_Briefing';
 import SAPIDimIntro from './components/SAPI_P4_DimIntro';
 import SAPIQuiz from './components/SAPI_P5_Quiz';
@@ -10,13 +9,14 @@ import SAPIResults from './components/SAPI_P7_Results';
 import SAPIScorecard from './components/SAPI_P8_Scorecard';
 import SAPIPeerComparison from './components/SAPI_P9_PeerComparison';
 import SAPIRoadmap from './components/SAPI_P10_Roadmap';
-import SAPIAdmin from './components/SAPI_Admin_E3';
+import SapiA1AdminDashboard from './components/SAPI_A1_AdminDashboard';
 import SubmissionsList from './components/SAPI_B1_SubmissionsList';
 import SubmissionDetail from './components/SAPI_B2_SubmissionDetail';
 import LeadsPipeline from './components/SAPI_C1_LeadsPipeline';
 import LeadDetail from './components/SAPI_C2_LeadDetail';
 import LeadDetailCombined from './components/SAPI_C2_B2_Combined';
 import QuestionEditor from './components/SAPI_E1_QuestionEditor';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -127,37 +127,41 @@ function App() {
       <div className="App">
         <ScrollToTop />
         <Routes>
-          <Route path="/" element={<SAPILanding />} />
-          <Route path="/preview" element={<SAPIPreview />} />
-          <Route path="/briefing" element={<BriefingWrapper setCurrentDimension={setCurrentDimension} />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/home" element={<ProtectedRoute allowedRole={2}><LandingPage /></ProtectedRoute>} />
+          <Route path="/preview" element={<ProtectedRoute allowedRole={2}><PreviewPage /></ProtectedRoute>} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/briefing" element={<ProtectedRoute allowedRole={2}><BriefingWrapper setCurrentDimension={setCurrentDimension} /></ProtectedRoute>} />
           <Route 
             path="/dimintro" 
-            element={<DimIntroWrapper 
+            element={<ProtectedRoute allowedRole={2}><DimIntroWrapper 
               currentDimension={currentDimension} 
               setCurrentDimension={setCurrentDimension}
-            />} 
+            /></ProtectedRoute>} 
           />
           <Route 
             path="/quiz" 
-            element={<QuizWrapper 
+            element={<ProtectedRoute allowedRole={2}><QuizWrapper 
               currentDimension={currentDimension}
               setCurrentDimension={setCurrentDimension}
-            />} 
+            /></ProtectedRoute>} 
           />
-          <Route path="/calculating" element={<SAPICalculating />} />
-          <Route path="/results" element={<SAPIResults />} />
-          <Route path="/scorecard" element={<SAPIScorecard />} />
-          <Route path="/peercomparison" element={<SAPIPeerComparison />} />
-          <Route path="/roadmap" element={<SAPIRoadmap />} />
-          <Route path="/admin" element={<SAPIAdmin />} />
-          <Route path="/admindashboard" element={<SAPIAdmin />} />
-          <Route path="/dashboard" element={<SAPIAdmin />} />
+          <Route path="/calculating" element={<ProtectedRoute allowedRole={2}><SAPICalculating /></ProtectedRoute>} />
+          <Route path="/results" element={<ProtectedRoute allowedRole={2}><SAPIResults /></ProtectedRoute>} />
+          <Route path="/scorecard" element={<ProtectedRoute allowedRole={2}><SAPIScorecard /></ProtectedRoute>} />
+          <Route path="/peercomparison" element={<ProtectedRoute allowedRole={2}><SAPIPeerComparison /></ProtectedRoute>} />
+          <Route path="/roadmap" element={<ProtectedRoute allowedRole={2}><SAPIRoadmap /></ProtectedRoute>} />
+          <Route path="/admin" element={<SapiA1AdminDashboard />} />
+          <Route path="/admindashboard" element={<SapiA1AdminDashboard />} />
+          <Route path="/dashboard" element={<SapiA1AdminDashboard />} />
           <Route path="/submissionlist" element={<SubmissionsList />} />
           <Route path="/submissiondetail" element={<SubmissionDetail />} />
           <Route path="/leadspipeline" element={<LeadsPipeline />} />
           <Route path="/leaddetail" element={<LeadDetail />} />
           <Route path="/leaddetailcombined" element={<LeadDetailCombined />} />
           <Route path="/questioneditor" element={<QuestionEditor />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
     </Router>
