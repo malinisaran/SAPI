@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageLayout, PageHeader, PageFooter } from "../pages/common";
+import { PageLayout, PageHeader, PageFooter } from "./common";
 
+// ── All Five Dimension Data ───────────────────────────────────────────────────
 const DIMENSION_DATA = [
   {
     number: "01",
@@ -16,6 +17,7 @@ const DIMENSION_DATA = [
       "Sovereign Compute Ratio",
       "Semiconductor Supply Chain Exposure",
     ],
+    weight: "22%",
   },
   {
     number: "02",
@@ -31,6 +33,7 @@ const DIMENSION_DATA = [
       "Foreign Direct Investment Controls",
       "AI Procurement Capacity",
     ],
+    weight: "20%",
   },
   {
     number: "03",
@@ -47,6 +50,7 @@ const DIMENSION_DATA = [
       "Digital Identity Infrastructure",
       "Cybersecurity Governance",
     ],
+    weight: "18%",
   },
   {
     number: "04",
@@ -62,6 +66,7 @@ const DIMENSION_DATA = [
       "Biometric & Sensitive Data Regime",
       "Strategic Data Asset Inventory",
     ],
+    weight: "18%",
   },
   {
     number: "05",
@@ -77,6 +82,7 @@ const DIMENSION_DATA = [
       "AI Strategy Coherence",
       "Citizen-Facing AI Services",
     ],
+    weight: "22%",
   },
 ];
 
@@ -126,13 +132,12 @@ function DimGlyph({ number }) {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────
-export default function SAPIDimIntro({ currentIndex = 0, onBegin, onBack }) {
+export default function DimIntroPage({ currentIndex = 0, onBegin, onBack }) {
   const navigate = useNavigate();
 
   const [ctaHover,  setCtaHover]  = useState(false);
   const [backHover, setBackHover] = useState(false);
 
-  // Get dimension data based on currentIndex prop
   const dim = DIMENSION_DATA[currentIndex] || DIMENSION_DATA[0];
   const isFirst = currentIndex === 0;
 
@@ -317,13 +322,5 @@ export default function SAPIDimIntro({ currentIndex = 0, onBegin, onBack }) {
 
       <PageFooter />
     </PageLayout>
-  );
-}
-
-// ── Demo wrapper (remove in production) ──────────────────────────────────────
-// This allows standalone preview of each dimension by cycling through them.
-export function SAPIDimIntroDemo() {
-  return (
-    <SAPIDimIntro />
   );
 }

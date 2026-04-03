@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { submitAssessment } from "../services/assessmentService";
-import { PageLayout, PageHeader, PageFooter } from "../pages/common";
+import { PageLayout, PageHeader, PageFooter } from "./common";
 
+// ── Dimension metadata ────────────────────────────────────────────────────────
 const DIMENSIONS = [
   { name: "Compute Capacity",               shortCode: "D1", weight: 0.175, ids: ["Q1","Q2","Q3","Q4","Q5"] },
   { name: "Capital Formation",              shortCode: "D2", weight: 0.225, ids: ["Q6","Q7","Q8","Q9","Q10","Q11"] },
@@ -11,14 +12,13 @@ const DIMENSIONS = [
   { name: "Directed Intelligence Maturity", shortCode: "D5", weight: 0.275, ids: ["Q25","Q26","Q27","Q28","Q29","Q30"] },
 ];
 
-// ── Scoring engine (mirrors P5) ───────────────────────────────────────────────
+// ── Scoring engine ───────────────────────────────────────────────────────────
 function computeAllScores(answers = {}) {
   const dimScores = DIMENSIONS.map(dim => {
     const vals = dim.ids.map(id => answers[id] || 0);
     return vals.reduce((a, b) => a + b, 0) / vals.length;
   });
   const [d1, d2, d3, d4, d5] = dimScores;
-  // Guard: prevent Math.pow(0, x) collapsing the whole score
   const safe = v => Math.max(v, 0.001);
   const composite =
     Math.pow(safe(d1), 0.175) *
@@ -38,7 +38,7 @@ function getTier(score) {
 }
 
 // ── Animated Logo Component ───────────────────────────────────────────────────
-function SAPIGlobeAnimated({ size = 117 }) {
+function SAPIGlobeAnimated({ size = 96 }) {
   return (
     <img
       src="/logo.png"
@@ -86,10 +86,8 @@ function DimBar({ dim, score, active, staggerIndex }) {
         <div
           className="h-full rounded-sm shadow-[0_0_8px_rgba(201,150,58,0.4)]"
           style={{
-            height: "100%",
             width: active ? `${Math.min(score, 100)}%` : "0%",
             background: 'linear-gradient(90deg, #C9963A 0%, #EDD98A 85%, #FFF8E0 100%)',
-            borderRadius: 2,
             transition: `width ${duration}s cubic-bezier(0.22, 0.61, 0.36, 1) ${delay}s`,
           }}
         />
@@ -98,60 +96,47 @@ function DimBar({ dim, score, active, staggerIndex }) {
   );
 }
 
-// ── P6 Main Component ─────────────────────────────────────────────────────────
-export default function SAPICalculating() {
+// ── Main Component ───────────────────────────────────────────────────────────
+export default function CalculatingPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [barsActive,     setBarsActive]     = useState(false);
+  const [barsActive, setBarsActive] = useState(false);
   const [completeActive, setCompleteActive] = useState(false);
   const [assessmentResults, setAssessmentResults] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  const [_error, setError] = useState(null);
 
-  // Get answers from navigation state and memoize
   const answers = useMemo(() => location.state?.answers || {}, [location.state]);
 
-  // Submit to API and calculate scores
   useEffect(() => {
     const submitAndCalculate = async () => {
       try {
-        // Transform answers to API format
         const answerArray = Object.entries(answers).map(([questionId, data]) => ({
           question_id: parseInt(questionId.replace('Q', '')),
           selected_option: data.selectedOption || 'a'
         }));
 
         if (answerArray.length === 0) {
-          // No answers, use mock data for demo
           console.log("No answers provided, using demo data");
           return;
         }
 
-        // Submit to backend
         const userProfile = JSON.parse(localStorage.getItem('sapi_user_profile') || '{}');
         const response = await submitAssessment(userProfile, answerArray);
         if (response.success) {
           setAssessmentResults(response.data);
-          // Store assessment ID for later retrieval
           if (response.data.assessment_id) {
             localStorage.setItem('sapi_assessment_id', response.data.assessment_id);
           }
-        } else {
-          setError("Failed to calculate scores");
         }
       } catch (err) {
         console.error("Assessment submission error:", err);
-        setError(err.message);
       }
     };
 
     submitAndCalculate();
   }, [answers]);
 
-  // Use API results or fallback to local calculation
   const { dimScores, composite } = useMemo(() => {
     if (assessmentResults) {
-      // Use API results
       return {
         dimScores: [
           assessmentResults.compute_capacity,
@@ -163,55 +148,45 @@ export default function SAPICalculating() {
         composite: assessmentResults.sapi_score
       };
     }
-    // Fallback: compute locally from answers
     return computeAllScores(
       Object.fromEntries(
         Object.entries(answers).map(([k, v]) => [k, v.score || 0])
       )
     );
   }, [assessmentResults, answers]);
-  // eslint-disable-next-line no-unused-vars
+
   const tier = useMemo(() => getTier(composite), [composite]);
 
   useEffect(() => {
-    // Bars start filling ~350ms after mount
     const t1 = setTimeout(() => setBarsActive(true), 350);
-
-    // "Assessment complete." appears ~2.7s in
     const t2 = setTimeout(() => setCompleteActive(true), 2700);
-
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
-  // Separate effect that triggers when assessmentResults is ready
   useEffect(() => {
     if (!assessmentResults) return;
-    
-    // Navigate to results once we have the API response
     const t3 = setTimeout(() => {
       const assessmentId = assessmentResults.assessment_id;
-      navigate('/results', { 
-        state: { 
+      navigate('/results', {
+        state: {
           results: assessmentResults,
           assessmentId: assessmentId,
           answers: answers,
           dimScores: dimScores,
           composite: composite,
           tier: tier
-        } 
+        }
       });
     }, 3600);
-
     return () => { clearTimeout(t3); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assessmentResults]);
+  }, [assessmentResults, answers, composite, dimScores, navigate, tier]);
 
   return (
     <PageLayout>
       {/* CSS Keyframes */}
       <style>{`
         @keyframes globeBreathe {
-          0%,100% { transform: scale(1); opacity: 0.92; }
+          0%, 100% { transform: scale(1); opacity: 0.92; }
           50% { transform: scale(1.04); opacity: 1; }
         }
         @keyframes fadeSlideUp {
@@ -299,75 +274,5 @@ export default function SAPICalculating() {
         </div>
       </div>
     </PageLayout>
-  );
-}
-
-// ── Demo wrapper (standalone preview) ────────────────────────────────────────
-export function SAPICalculatingDemo() {
-  const [appState, setAppState] = useState({
-    orgProfile:     {},
-    answers: {
-      // D1 – Compute Capacity (Q1–Q5)
-      Q1: 75, Q2: 70, Q3: 65, Q4: 50, Q5: 40,
-      // D2 – Capital Formation (Q6–Q11)
-      Q6: 55, Q7: 60, Q8: 45, Q9: 50, Q10: 40, Q11: 35,
-      // D3 – Regulatory Readiness (Q12–Q18)
-      Q12: 65, Q13: 50, Q14: 55, Q15: 60, Q16: 45, Q17: 55, Q18: 50,
-      // D4 – Data Sovereignty (Q19–Q24)
-      Q19: 35, Q20: 40, Q21: 50, Q22: 45, Q23: 35, Q24: 65,
-      // D5 – Directed Intelligence Maturity (Q25–Q30)
-      Q25: 65, Q26: 60, Q27: 55, Q28: 50, Q29: 45, Q30: 60,
-    },
-    scores:         {},
-    compositeScore: null,
-    tier:           null,
-  });
-
-  const [currentPage, setCurrentPage] = useState("calculating");
-
-  function handleSetPage(page) {
-    // In demo: show final state instead of navigating
-    if (page === "results") {
-      setCurrentPage("results_stub");
-    }
-  }
-
-  if (currentPage === "results_stub") {
-    const { composite } = computeAllScores(appState.answers);
-    const tier = getTier(composite);
-    return (
-      <div className="bg-sapi-void min-h-screen flex flex-col items-center justify-center gap-4 p-8">
-        <div className="font-serif text-[13px] text-sapi-muted tracking-[0.2em] uppercase">
-          Navigation target
-        </div>
-        <div className="font-serif text-5xl text-sapi-paleGold">
-          {composite.toFixed(1)}
-        </div>
-        <div className="font-sans text-[13px] tracking-[0.14em] uppercase"
-             style={{ color: tier.color }}>
-          {tier.label}
-        </div>
-        <div className="font-sans text-xs text-sapi-muted mt-2">
-          Page would now render: <strong className="text-sapi-parchment">results</strong>
-        </div>
-        <button
-          onClick={() => {
-            setAppState(prev => ({ ...prev, scores: {}, compositeScore: null, tier: null }));
-            setCurrentPage("calculating");
-          }}
-          className="mt-6 px-6 py-2.5 bg-transparent border border-sapi-gold rounded text-sapi-gold font-sans text-xs tracking-[0.12em] uppercase cursor-pointer"
-        >
-          Replay animation
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <SAPICalculating
-      appState={appState}
-      setAppState={setAppState}
-      setCurrentPage={handleSetPage}
-    />
   );
 }

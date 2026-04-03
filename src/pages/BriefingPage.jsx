@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageLayout, PageHeader, PageFooter } from "../pages/common";
+import { PageLayout, PageHeader, PageFooter } from "./common";
 
 // ── Dimension data ───────────────────────────────────────────────────────────
 const DIMENSIONS = [
@@ -60,7 +60,6 @@ const INSTRUCTIONS = [
 ];
 
 // ── Sub-components ───────────────────────────────────────────────────────────
-
 function SectionLabel({ children }) {
   return (
     <div className="font-sans text-[10px] tracking-super-wide text-sapi-gold uppercase mb-4">
@@ -74,7 +73,7 @@ function Rule() {
 }
 
 // ── Main component ───────────────────────────────────────────────────────────
-export default function SAPIBriefing({ onBegin }) {
+export default function BriefingPage({ onBegin }) {
   const navigate = useNavigate();
 
   const [beginHover, setBeginHover] = useState(false);

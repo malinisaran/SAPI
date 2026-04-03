@@ -1,46 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchQuestions } from "../services/questionService";
+import { PageLayout, PageHeader, PageFooter } from "../pages/common";
 
-// ── Logo Component ──────────────────────────────────────────────────────────
-function SAPIGlobe({ size = 64 }) {
-  return (
-    <img
-      src="/logo.png"
-      alt="SAPI Logo"
-      style={{
-        width: size,
-        height: size,
-        objectFit: 'contain',
-        background: 'transparent',
-        borderRadius: '50%',
-        padding: '4px',
-        boxSizing: 'border-box',
-        WebkitMaskImage: 'radial-gradient(circle, white 100%, transparent 100%)',
-        maskImage: 'radial-gradient(circle, white 100%, transparent 100%)'
-      }}
-    />
-  );
-}
-
-// ── Colour palette ────────────────────────────────────────────────────────────
-const C = {
-  void:       "#06030E",
-  navy:       "#0F0830",
-  midnight:   "#1A1540",
-  gold:       "#C9963A",
-  paleGold:   "#EDD98A",
-  parchment:  "#FBF5E6",
-  muted:      "#9880B0",
-  bronze:     "rgba(107,69,8,0.22)",
-  bronzeStr:  "rgba(107,69,8,0.40)",
-  emerald:    "#28A868",
-  amber:      "#F0C050",
-  crimson:    "#C03058",
-  blue:       "#4A7AE0",
-};
-
-// ── Complete question data ────────────────────────────────────────────────────
 const ALL_QUESTIONS = [
   // DIMENSION 1 — COMPUTE CAPACITY
   {
@@ -422,65 +384,42 @@ function DualProgressBar({ dimIndex, questionIndexInDim, totalInDim, questionsBe
   const overallPct    = ((questionsBeforeDim + questionIndexInDim + 1) / 30) * 100;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div className="flex flex-col gap-2">
       {/* Dimension progress */}
       <div>
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          marginBottom: 5,
-        }}>
-          <span style={{
-            fontFamily: "system-ui, sans-serif", fontSize: 10,
-            letterSpacing: "0.16em", textTransform: "uppercase",
-            color: C.muted, opacity: 0.7,
-          }}>
+        <div className="flex justify-between items-center mb-1">
+          <span className="font-sans text-[10px] tracking-wide uppercase text-sapi-muted opacity-70">
             Dimension Progress
           </span>
-          <span style={{
-            fontFamily: "system-ui, sans-serif", fontSize: 10,
-            color: C.gold, letterSpacing: "0.08em",
-          }}>
+          <span className="font-sans text-[10px] tracking-wide text-sapi-gold">
             {questionIndexInDim + 1} / {totalInDim}
           </span>
         </div>
-        <div style={{
-          height: 3, background: "rgba(107,69,8,0.2)", borderRadius: 2, overflow: "hidden",
-        }}>
-          <div style={{
-            height: "100%", width: `${dimPct}%`,
-            background: `linear-gradient(90deg, ${C.gold} 0%, #EDD98A 100%)`,
-            borderRadius: 2, transition: "width 0.35s ease",
-          }} />
+        <div className="h-0.5 bg-sapi-bronze/20 rounded-sm overflow-hidden">
+          <div
+            className="h-full rounded-sm transition-all duration-350"
+            style={{
+              width: `${dimPct}%`,
+              background: 'linear-gradient(90deg, #C9963A 0%, #EDD98A 100%)',
+            }}
+          />
         </div>
       </div>
       {/* Overall progress */}
       <div>
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          marginBottom: 5,
-        }}>
-          <span style={{
-            fontFamily: "system-ui, sans-serif", fontSize: 10,
-            letterSpacing: "0.16em", textTransform: "uppercase",
-            color: C.muted, opacity: 0.7,
-          }}>
+        <div className="flex justify-between items-center mb-1">
+          <span className="font-sans text-[10px] tracking-wide uppercase text-sapi-muted opacity-70">
             Overall Assessment
           </span>
-          <span style={{
-            fontFamily: "system-ui, sans-serif", fontSize: 10,
-            color: C.muted, letterSpacing: "0.08em",
-          }}>
+          <span className="font-sans text-[10px] tracking-wide text-sapi-muted">
             {questionsBeforeDim + questionIndexInDim + 1} / 30
           </span>
         </div>
-        <div style={{
-          height: 3, background: "rgba(107,69,8,0.14)", borderRadius: 2, overflow: "hidden",
-        }}>
-          <div style={{
-            height: "100%", width: `${overallPct}%`,
-            background: "rgba(201,150,58,0.35)",
-            borderRadius: 2, transition: "width 0.35s ease",
-          }} />
+        <div className="h-0.5 bg-sapi-bronze/15 rounded-sm overflow-hidden">
+          <div
+            className="h-full bg-sapi-gold/35 rounded-sm transition-all duration-350"
+            style={{ width: `${overallPct}%` }}
+          />
         </div>
       </div>
     </div>
@@ -490,27 +429,18 @@ function DualProgressBar({ dimIndex, questionIndexInDim, totalInDim, questionsBe
 // ── 5-segment dimension stepper ───────────────────────────────────────────────
 function DimensionStepper({ currentDimIndex }) {
   return (
-    <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+    <div className="flex gap-1.5 items-center">
       {DIMENSIONS.map((dim, i) => {
         const isComplete = i < currentDimIndex;
         const isCurrent  = i === currentDimIndex;
         return (
-          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
-            <div style={{
-              height: 3, width: "100%", borderRadius: 2,
-              background:   isComplete ? C.gold
-                          : isCurrent  ? "transparent"
-                          :              "rgba(107,69,8,0.2)",
-              border:       isCurrent  ? `1px solid ${C.gold}` : "1px solid transparent",
-              transition:   "background 0.2s",
-            }} />
-            <span style={{
-              fontFamily: "system-ui, sans-serif", fontSize: 9,
-              letterSpacing: "0.1em", textTransform: "uppercase",
-              color: isComplete ? C.gold : isCurrent ? C.paleGold : C.muted,
-              opacity: isCurrent ? 1 : isComplete ? 0.8 : 0.4,
-              whiteSpace: "nowrap",
-            }}>
+          <div key={i} className="flex flex-col items-center gap-1 flex-1">
+            <div className={`h-1 w-full rounded-sm transition-all duration-200 ${
+              isComplete ? 'bg-sapi-gold' : isCurrent ? 'bg-transparent border border-sapi-gold' : 'bg-sapi-bronze/20'
+            }`} />
+            <span className={`font-sans text-[9px] tracking-wide uppercase whitespace-nowrap ${
+              isComplete ? 'text-sapi-gold opacity-80' : isCurrent ? 'text-sapi-paleGold' : 'text-sapi-muted opacity-40'
+            }`}>
               {dim.shortCode}
             </span>
           </div>
@@ -530,86 +460,40 @@ function AnswerCard({ label, optIndex, isSelected, onSelect }) {
       onClick={onSelect}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        position:       "relative",
-        display:        "flex",
-        alignItems:     "flex-start",
-        gap:            14,
-        padding:        "15px 18px",
-        background:     isSelected
-                          ? "rgba(201,150,58,0.09)"
-                          : hovered
-                            ? "rgba(201,150,58,0.04)"
-                            : C.midnight,
-        border:         `1px solid ${
-                          isSelected
-                            ? "rgba(201,150,58,0.45)"
-                            : hovered
-                              ? "rgba(107,69,8,0.4)"
-                              : "rgba(107,69,8,0.22)"
-                        }`,
-        borderLeft:     isSelected
-                          ? `3px solid ${C.gold}`
-                          : hovered
-                            ? "3px solid rgba(201,150,58,0.3)"
-                            : "3px solid transparent",
-        borderRadius:   3,
-        cursor:         "pointer",
-        transition:     "background 0.15s, border-color 0.15s",
-        userSelect:     "none",
-        marginBottom:   0,
-      }}
+      className={`relative flex items-start gap-3.5 py-3.5 px-4.5 rounded-sm cursor-pointer select-none transition-all duration-150 ${
+        isSelected
+          ? 'bg-sapi-gold/9 border border-sapi-gold/45 border-l-[3px] border-l-sapi-gold'
+          : hovered
+          ? 'bg-sapi-gold/4 border border-sapi-bronze/40 border-l-[3px] border-l-sapi-gold/30'
+          : 'bg-sapi-midnight border border-sapi-bronze border-l-[3px] border-l-transparent'
+      }`}
     >
       {/* Letter indicator */}
-      <div style={{
-        flexShrink:   0,
-        width:        24,
-        height:       24,
-        borderRadius: 2,
-        background:   isSelected ? C.gold : "rgba(107,69,8,0.2)",
-        border:       `1px solid ${isSelected ? C.gold : "rgba(107,69,8,0.35)"}`,
-        display:      "flex",
-        alignItems:   "center",
-        justifyContent: "center",
-        marginTop:    1,
-        transition:   "background 0.15s, border-color 0.15s",
-      }}>
-        <span style={{
-          fontFamily:    "system-ui, sans-serif",
-          fontSize:      10,
-          fontWeight:    500,
-          letterSpacing: "0.06em",
-          color:         isSelected ? C.void : C.muted,
-          lineHeight:    1,
-        }}>
+      <div className={`flex-shrink-0 w-6 h-6 rounded-sm flex items-center justify-center mt-0.5 transition-all duration-150 ${
+        isSelected
+          ? 'bg-sapi-gold border border-sapi-gold'
+          : 'bg-sapi-bronze/20 border border-sapi-bronze/35'
+      }`}>
+        <span className={`font-sans text-[10px] font-medium tracking-wide leading-none ${
+          isSelected ? 'text-sapi-void' : 'text-sapi-muted'
+        }`}>
           {letters[optIndex]}
         </span>
       </div>
 
       {/* Answer text */}
-      <span style={{
-        fontFamily:    "system-ui, sans-serif",
-        fontSize:      14,
-        color:         isSelected ? C.parchment : hovered ? C.parchment : "rgba(251,245,230,0.8)",
-        lineHeight:    1.55,
-        letterSpacing: "0.012em",
-        paddingTop:    4,
-        transition:    "color 0.15s",
-        flex:          1,
-      }}>
+      <span className={`font-sans text-sm leading-snug pt-0.5 transition-colors duration-150 flex-1 ${
+        isSelected ? 'text-sapi-parchment' : hovered ? 'text-sapi-parchment' : 'text-sapi-parchment/80'
+      }`}>
         {label}
       </span>
 
       {/* Selected checkmark */}
       {isSelected && (
-        <div style={{
-          flexShrink: 0,
-          marginTop:  5,
-          marginLeft: 4,
-        }}>
+        <div className="flex-shrink-0 mt-1 ml-1">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <circle cx="7" cy="7" r="6.5" stroke={C.gold} strokeWidth="1" />
-            <path d="M4 7L6.2 9.2L10 5" stroke={C.gold} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="7" cy="7" r="6.5" stroke="#C9963A" strokeWidth="1" />
+            <path d="M4 7L6.2 9.2L10 5" stroke="#C9963A" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       )}
@@ -765,255 +649,97 @@ export default function SAPIQuiz({ appState, setCurrentPage, setAppState }) {
   // Show loading state while fetching questions
   if (loading) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        background: C.void,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}>
-        <SAPIGlobe size={64} />
-        <div style={{
-          fontFamily: "system-ui, sans-serif",
-          fontSize: 14,
-          color: C.muted,
-          letterSpacing: "0.1em",
-          marginTop: 24,
-        }}>
-          Loading assessment questions…
+      <PageLayout>
+        <PageHeader showAdmin={false} />
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="font-sans text-sm text-sapi-muted tracking-wide mt-6">
+            Loading assessment questions…
+          </div>
         </div>
-      </div>
+        <PageFooter />
+      </PageLayout>
     );
   }
 
   // Show error state if API failed and we have no questions
   if (error && allQuestions.length === 0) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        background: C.void,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 32,
-      }}>
-        <SAPIGlobe size={64} />
-        <div style={{
-          fontFamily: "'Georgia', serif",
-          fontSize: 18,
-          color: C.crimson,
-          marginTop: 24,
-          marginBottom: 16,
-        }}>
-          Unable to load questions
+      <PageLayout>
+        <PageHeader showAdmin={false} />
+        <div className="flex-1 flex flex-col items-center justify-center px-8">
+          <div className="font-serif text-lg text-sapi-crimson mt-6 mb-4">
+            Unable to load questions
+          </div>
+          <div className="font-sans text-sm text-sapi-muted mb-6 text-center">
+            {error}
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-sapi-gold text-sapi-void border-none px-8 py-3 font-sans text-xs tracking-extra-wide uppercase cursor-pointer rounded-sm"
+          >
+            Retry
+          </button>
         </div>
-        <div style={{
-          fontFamily: "system-ui, sans-serif",
-          fontSize: 13,
-          color: C.muted,
-          marginBottom: 24,
-          textAlign: "center",
-        }}>
-          {error}
-        </div>
-        <button
-          onClick={() => window.location.reload()}
-          style={{
-            background: C.gold,
-            color: C.void,
-            border: "none",
-            padding: "12px 32px",
-            fontFamily: "system-ui, sans-serif",
-            fontSize: 12,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            cursor: "pointer",
-            borderRadius: 3,
-          }}
-        >
-          Retry
-        </button>
-      </div>
+        <PageFooter />
+      </PageLayout>
     );
   }
 
   return (
-    <div style={{
-      minHeight:   "100vh",
-      background:  C.void,
-      display:     "flex",
-      flexDirection: "column",
-    }}>
+    <PageLayout>
+      <PageHeader showAdmin={false} />
 
       {/* Submitting loader overlay */}
       {submitting && (
-        <div style={{
-          position:      "fixed",
-          inset:         0,
-          background:    "rgba(6,3,14,0.85)",
-          backdropFilter: "blur(4px)",
-          display:       "flex",
-          flexDirection: "column",
-          alignItems:    "center",
-          justifyContent: "center",
-          zIndex:        9999,
-        }}>
-          <SAPIGlobe size={64} />
-          <div style={{
-            fontFamily:    "system-ui, sans-serif",
-            fontSize:      14,
-            color:         C.paleGold,
-            letterSpacing: "0.1em",
-            marginTop:     24,
-          }}>
+        <div className="fixed inset-0 bg-sapi-void/85 backdrop-blur-sm flex flex-col items-center justify-center z-[9999]">
+          <div className="font-sans text-sm text-sapi-paleGold tracking-wide mt-6">
             Submitting assessment…
           </div>
         </div>
       )}
 
-      {/* ── Header ── */}
-      <header style={{
-        borderBottom: `1px solid rgba(107,69,8,0.18)`,
-        background:   "rgba(15,8,48,0.6)",
-        backdropFilter: "blur(8px)",
-        position:     "sticky",
-        top:          0,
-        zIndex:       100,
-      }}>
-        <div style={{
-          maxWidth: 800, margin: "0 auto", padding: "14px 24px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <SAPIGlobe size={48} />
-            <div>
-              <div style={{
-                fontFamily:    "'Georgia', 'Times New Roman', serif",
-                fontSize:      11,
-                letterSpacing: "0.22em",
-                textTransform: "uppercase",
-                color:         C.parchment,
-                lineHeight:    1.2,
-              }}>
-                The Sovereign AI Power Index
-              </div>
-              <div style={{
-                fontFamily:    "system-ui, sans-serif",
-                fontSize:      10,
-                letterSpacing: "0.12em",
-                color:         C.muted,
-                opacity:       0.65,
-              }}>
-                Tier 1 Assessment · {30 - globalQNum} questions remaining
-              </div>
-            </div>
+      {/* ── Compact header ── */}
+      <div className="max-w-container mx-auto px-8 py-5">
+        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-sapi-bronze pb-4">
+          <div className="flex items-center gap-3">
+            <span className="font-serif text-[13px] text-sapi-gold tracking-wide">
+              The Sovereign AI Power Index
+            </span>
+            <span className="font-sans text-[10px] text-sapi-muted tracking-wide opacity-65">
+              Tier 1 Assessment · {30 - globalQNum} questions remaining
+            </span>
           </div>
 
           {/* Q counter pill */}
-          <div style={{
-            display:       "flex",
-            alignItems:    "center",
-            gap:           8,
-            background:    "rgba(201,150,58,0.08)",
-            border:        `1px solid rgba(201,150,58,0.2)`,
-            borderRadius:  20,
-            padding:       "5px 13px",
-          }}>
-            <span style={{
-              fontFamily:    "system-ui, sans-serif",
-              fontSize:      11,
-              color:         C.muted,
-              letterSpacing: "0.08em",
-            }}>
-              Q
-            </span>
-            <span style={{
-              fontFamily:    "'Georgia', 'Times New Roman', serif",
-              fontSize:      16,
-              color:         C.paleGold,
-              lineHeight:    1,
-            }}>
-              {globalQNum}
-            </span>
-            <span style={{
-              fontFamily:    "system-ui, sans-serif",
-              fontSize:      10,
-              color:         C.muted,
-              opacity:       0.5,
-            }}>
-              / 30
-            </span>
+          <div className="flex items-center gap-2 bg-sapi-gold/8 border border-sapi-gold/20 rounded-full px-3 py-1">
+            <span className="font-sans text-[11px] text-sapi-muted tracking-wide">Q</span>
+            <span className="font-serif text-base text-sapi-paleGold leading-none">{globalQNum}</span>
+            <span className="font-sans text-[10px] text-sapi-muted opacity-50">/ 30</span>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* ── Main content ── */}
-      <main style={{
-        flex:      1,
-        maxWidth:  800,
-        width:     "100%",
-        margin:    "0 auto",
-        padding:   "32px 24px 64px",
-      }}>
+      <main className="flex-1 max-w-[800px] w-full mx-auto px-6 py-8 pb-16">
 
         {/* ── Progress & context bar ── */}
-        <div style={{
-          background:   C.navy,
-          border:       `1px solid ${C.bronze}`,
-          borderRadius: 3,
-          padding:      "18px 20px",
-          marginBottom: 28,
-        }}>
+        <div className="bg-sapi-navy border border-sapi-bronze rounded-sm p-4.5 mb-7">
           {/* Dimension label row */}
-          <div style={{
-            display:       "flex",
-            alignItems:    "center",
-            justifyContent: "space-between",
-            marginBottom:  16,
-            flexWrap:      "wrap",
-            gap:           8,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{
-                fontFamily:    "'Georgia', 'Times New Roman', serif",
-                fontSize:      13,
-                color:         C.gold,
-                letterSpacing: "0.04em",
-              }}>
-                {dim.shortCode}
-              </div>
-              <div style={{
-                width:     1,
-                height:    14,
-                background: "rgba(201,150,58,0.3)",
-              }} />
-              <div style={{
-                fontFamily:    "system-ui, sans-serif",
-                fontSize:      11,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                color:         C.parchment,
-                opacity:       0.85,
-              }}>
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-serif text-sm text-sapi-gold tracking-wide">{dim.shortCode}</span>
+              <div className="w-px h-3 bg-sapi-gold/30" />
+              <span className="font-sans text-[11px] tracking-wide uppercase text-sapi-parchment/85">
                 {dim.name}
-              </div>
+              </span>
             </div>
-
-            <div style={{
-              fontFamily:    "system-ui, sans-serif",
-              fontSize:      10,
-              letterSpacing: "0.12em",
-              color:         C.muted,
-              opacity:       0.65,
-            }}>
-              Dimension {dimIndex + 1} of 5&nbsp;&nbsp;·&nbsp;&nbsp;Question {qIndex + 1} of {dimQuestions.length}
-            </div>
+            <span className="font-sans text-[10px] tracking-wide text-sapi-muted/65">
+              Dimension {dimIndex + 1} of 5 · Question {qIndex + 1} of {dimQuestions.length}
+            </span>
           </div>
 
           {/* Dimension stepper */}
-          <div style={{ marginBottom: 18 }}>
+          <div className="mb-4">
             <DimensionStepper currentDimIndex={dimIndex} />
           </div>
 
@@ -1027,63 +753,26 @@ export default function SAPIQuiz({ appState, setCurrentPage, setAppState }) {
         </div>
 
         {/* ── Question card ── */}
-        <div style={{
-          background:   C.navy,
-          border:       `1px solid ${C.bronze}`,
-          borderRadius: 3,
-          padding:      "28px 28px 24px",
-          marginBottom: 20,
-        }}>
+        <div className="bg-sapi-navy border border-sapi-bronze rounded-sm p-7 pb-6 mb-5">
           {/* Question number */}
-          <div style={{
-            display:       "flex",
-            alignItems:    "center",
-            gap:           10,
-            marginBottom:  20,
-          }}>
-            <div style={{
-              fontFamily:    "system-ui, sans-serif",
-              fontSize:      10,
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color:         C.gold,
-              opacity:       0.75,
-            }}>
+          <div className="flex items-center gap-2.5 mb-5">
+            <span className="font-sans text-[10px] tracking-super-wide uppercase text-sapi-gold/75">
               Question {globalQNum}
-            </div>
-            <div style={{
-              flex:       1,
-              height:     1,
-              background: "rgba(201,150,58,0.15)",
-            }} />
-            {/* Answered indicator for dim */}
-            <div style={{
-              fontFamily:    "system-ui, sans-serif",
-              fontSize:      9,
-              letterSpacing: "0.12em",
-              color:         C.muted,
-              opacity:       0.5,
-            }}>
+            </span>
+            <div className="flex-1 h-px bg-sapi-gold/15" />
+            <span className="font-sans text-[9px] tracking-wide text-sapi-muted/50">
               {answeredCount} / {dimQuestions.length} answered in this dimension
-            </div>
+            </span>
           </div>
 
           {/* Question text */}
-          <p style={{
-            fontFamily:    "'Georgia', 'Times New Roman', serif",
-            fontSize:      17,
-            color:         C.parchment,
-            lineHeight:    1.7,
-            letterSpacing: "0.012em",
-            margin:        "0 0 28px",
-            fontWeight:    400,
-          }}>
-            {currentQuestion.text}
+          <p className="font-serif text-[17px] text-sapi-parchment leading-relaxed tracking-wide mb-7">
+            {currentQuestion?.text}
           </p>
 
           {/* Answer cards */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {currentQuestion.options.map((opt, i) => (
+          <div className="flex flex-col gap-2">
+            {currentQuestion?.options?.map((opt, i) => (
               <AnswerCard
                 key={i}
                 label={opt.label}
@@ -1097,69 +786,38 @@ export default function SAPIQuiz({ appState, setCurrentPage, setAppState }) {
 
         {/* ── Selection required notice ── */}
         {selectedScore == null && (
-          <div style={{
-            display:       "flex",
-            alignItems:    "center",
-            gap:           8,
-            marginBottom:  20,
-            opacity:       0.55,
-          }}>
+          <div className="flex items-center gap-2 mb-5 opacity-55">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <circle cx="6" cy="6" r="5" stroke={C.muted} strokeWidth="1" />
-              <path d="M6 3.5V6" stroke={C.muted} strokeWidth="1.2" strokeLinecap="round" />
-              <circle cx="6" cy="8.2" r="0.6" fill={C.muted} />
+              <circle cx="6" cy="6" r="5" stroke="#9880B0" strokeWidth="1" />
+              <path d="M6 3.5V6" stroke="#9880B0" strokeWidth="1.2" strokeLinecap="round" />
+              <circle cx="6" cy="8.2" r="0.6" fill="#9880B0" />
             </svg>
-            <span style={{
-              fontFamily:    "system-ui, sans-serif",
-              fontSize:      11,
-              color:         C.muted,
-              letterSpacing: "0.08em",
-            }}>
+            <span className="font-sans text-[11px] text-sapi-muted tracking-wide">
               Select an option to proceed
             </span>
           </div>
         )}
 
         {/* ── Navigation buttons ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-
-          {/* Next / Continue button */}
+        <div className="flex flex-col gap-2.5">
           <button
             disabled={selectedScore == null}
             onMouseEnter={() => setNextHover(true)}
             onMouseLeave={() => setNextHover(false)}
             onClick={handleNext}
-            style={{
-              width:         "100%",
-              background:    selectedScore == null
-                               ? "rgba(201,150,58,0.15)"
-                               : nextHover
-                                 ? "#B8862A"
-                                 : C.gold,
-              color:         selectedScore == null ? "rgba(201,150,58,0.4)" : C.void,
-              border:        selectedScore == null
-                               ? "1px solid rgba(201,150,58,0.2)"
-                               : "none",
-              padding:       "16px 48px",
-              fontFamily:    "system-ui, sans-serif",
-              fontSize:      12,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              fontWeight:    500,
-              cursor:        selectedScore == null ? "not-allowed" : "pointer",
-              borderRadius:  3,
-              transition:    "background 0.15s, color 0.15s",
-              display:       "flex",
-              alignItems:    "center",
-              justifyContent: "center",
-              gap:           10,
-            }}
+            className={`w-full px-12 py-4 font-sans text-xs tracking-extra-wide uppercase font-medium rounded-sm transition-all duration-150 flex items-center justify-center gap-2.5 ${
+              selectedScore == null
+                ? 'bg-sapi-gold/15 text-sapi-gold/40 border border-sapi-gold/20 cursor-not-allowed'
+                : nextHover
+                ? 'bg-[#B8862A] text-sapi-void'
+                : 'bg-sapi-gold text-sapi-void'
+            }`}
           >
             {nextLabel}
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
               <path
                 d="M4.5 2.5L9 6.5L4.5 10.5"
-                stroke={selectedScore == null ? "rgba(201,150,58,0.35)" : C.void}
+                stroke={selectedScore == null ? "rgba(201,150,58,0.35)" : "#06030E"}
                 strokeWidth="1.4"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -1167,55 +825,21 @@ export default function SAPIQuiz({ appState, setCurrentPage, setAppState }) {
             </svg>
           </button>
 
-          {/* Back button */}
           <button
             onMouseEnter={() => setBackHover(true)}
             onMouseLeave={() => setBackHover(false)}
             onClick={handleBack}
-            style={{
-              width:         "100%",
-              background:    "transparent",
-              color:         backHover ? C.parchment : C.muted,
-              border:        `1px solid ${backHover ? C.bronzeStr : C.bronze}`,
-              padding:       "14px 48px",
-              fontFamily:    "system-ui, sans-serif",
-              fontSize:      12,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              fontWeight:    400,
-              cursor:        "pointer",
-              borderRadius:  3,
-              transition:    "color 0.15s, border-color 0.15s",
-            }}
+            className={`w-full px-12 py-3.5 font-sans text-xs tracking-extra-wide uppercase font-normal rounded-sm transition-colors duration-150 border ${
+              backHover ? 'text-sapi-parchment border-sapi-bronze/60' : 'text-sapi-muted border-sapi-bronze'
+            }`}
           >
             ← Back
           </button>
         </div>
-
       </main>
 
-      {/* ── Footer ── */}
-      <footer style={{ borderTop: `1px solid ${C.bronze}` }}>
-        <div style={{
-          maxWidth: 800, margin: "0 auto", padding: "16px 24px",
-          display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8,
-        }}>
-          <span style={{
-            fontFamily: "system-ui, sans-serif", fontSize: 11,
-            color: C.muted, letterSpacing: "0.1em", opacity: 0.45,
-          }}>
-            © 2026 The Sovereign AI Power Index. All rights reserved.
-          </span>
-          <span style={{
-            fontFamily: "system-ui, sans-serif", fontSize: 11,
-            color: C.muted, letterSpacing: "0.1em", opacity: 0.45,
-          }}>
-            SAPI · Tier 1 · v1.0
-          </span>
-        </div>
-      </footer>
-
-    </div>
+      <PageFooter />
+    </PageLayout>
   );
 }
 
@@ -1248,8 +872,8 @@ export function SAPIQuizDemo() {
 
   if (currentPage === "dimIntro_stub") {
     return (
-      <div style={{ background: C.void, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: C.parchment, fontFamily: "system-ui" }}>Loading next dimension…</div>
+      <div className="bg-sapi-void min-h-screen flex items-center justify-center">
+        <div className="text-sapi-parchment font-sans">Loading next dimension…</div>
       </div>
     );
   }

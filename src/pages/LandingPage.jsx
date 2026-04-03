@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageLayout, PageHeader, PageFooter } from "../pages/common";
+import { PageLayout, PageHeader, PageFooter } from "./common";
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 const DIMENSIONS = [
@@ -47,7 +47,7 @@ const TIERS = [
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function SAPILanding({ onBegin }) {
+export default function LandingPage({ onBegin }) {
   const navigate = useNavigate();
   const [hovering, setHovering] = useState(false);
 
