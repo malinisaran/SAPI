@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { submitAssessment } from "../services/assessmentService";
-import { PageLayout, PageHeader, PageFooter } from "./common";
+import { PageLayout } from "./common";
 
 // ── Dimension metadata ────────────────────────────────────────────────────────
 const DIMENSIONS = [

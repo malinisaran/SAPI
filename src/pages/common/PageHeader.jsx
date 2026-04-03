@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { SAPIGlobe } from "./Logo";
 
 /**
@@ -8,8 +7,6 @@ import { SAPIGlobe } from "./Logo";
  * @param {React.ReactNode} props.rightContent - Custom content to show on the right side
  */
 export function PageHeader({ showAdmin = true, rightContent }) {
-  const navigate = useNavigate();
-
   return (
     <header className="border-b border-sapi-bronze py-7 pb-6">
       <div className="max-w-container mx-auto px-8 flex items-center gap-5">
