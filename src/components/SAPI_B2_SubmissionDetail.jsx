@@ -598,9 +598,6 @@ function SubmissionDetail({ submission, submissions, setSubmissions, setAdminPag
 export default function B2_PreviewApp() {
   const [submissions, setSubmissions] = useState(DEMO_SUBMISSIONS_INIT);
   const [selectedId, setSelectedId] = useState("sub_001");
-  const [adminPage, setAdminPage] = useState("submissionDetail");
-  const [selectedLead, setSelectedLead] = useState(null);
-  // eslint-disable-next-line no-unused-vars
 
   const submission = submissions.find(s => s.id === selectedId) || submissions[0];
 
@@ -630,8 +627,8 @@ export default function B2_PreviewApp() {
         submission={submission}
         submissions={submissions}
         setSubmissions={setSubmissions}
-        setAdminPage={setAdminPage}
-        setSelectedLead={setSelectedLead}
+        setAdminPage={() => {}}
+        setSelectedLead={() => {}}
       />
     </div>
   );
