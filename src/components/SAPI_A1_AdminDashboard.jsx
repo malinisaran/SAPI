@@ -177,9 +177,6 @@ const shortCountry = (name) =>
     .replace('Kingdom of ', '')
     .replace('United Arab Emirates', 'UAE');
 
-const fmtDate = (iso) =>
-  new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
 const fmtShortDate = (iso) =>
   new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 

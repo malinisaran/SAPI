@@ -509,7 +509,7 @@ function SubmissionDetail({ submission, submissions, setSubmissions, setAdminPag
   const handleExportPDF = () => showToast("Export PDF queued");
 
   const tc = tierColor(submission.tier);
-  const sc = stageColor(submission.leadStage);
+  // const sc = stageColor(submission.leadStage); // Unused
 
   return (
     <div style={{ minHeight:"100vh", background:"#F7F4EF", fontFamily:"system-ui, -apple-system, sans-serif" }}>
@@ -600,6 +600,7 @@ export default function B2_PreviewApp() {
   const [selectedId, setSelectedId] = useState("sub_001");
   const [adminPage, setAdminPage] = useState("submissionDetail");
   const [selectedLead, setSelectedLead] = useState(null);
+  // eslint-disable-next-line no-unused-vars
 
   const submission = submissions.find(s => s.id === selectedId) || submissions[0];
 
